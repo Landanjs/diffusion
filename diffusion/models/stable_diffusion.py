@@ -154,12 +154,12 @@ class StableDiffusion(ComposerModel):
     def forward(self, batch):
         latents, conditioning = None, None
         # Use latents if specified and available. When specified, they might not exist during eval
+        attention_mask = None
         if self.precomputed_latents and self.image_latents_key in batch and self.text_latents_key in batch:
             latents, conditioning = batch[self.image_latents_key], batch[self.text_latents_key]
         else:
             inputs, conditioning = batch[self.image_key], batch[self.text_key]
             conditioning = conditioning.view(-1, conditioning.shape[-1])
-            attention_mask = None
             if 'attention_mask' in batch:
                 attention_mask = batch['attention_mask'].view(-1, batch['attention_mask'].shape[-1])
             if self.encode_latents_in_fp16:
@@ -184,7 +184,12 @@ class StableDiffusion(ComposerModel):
         noised_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
         # Forward through the model
-        return self.unet(noised_latents, timesteps, conditioning)['sample'], noise, timesteps
+        if attention_mask is not None:
+            print('Changing mask type!!!!')
+            attention_mask = attention_mask.bool()
+            print(attention_mask.dtype)
+        return self.unet(noised_latents, timesteps, conditioning,
+                         encoder_attention_mask=attention_mask)['sample'], noise, timesteps
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
