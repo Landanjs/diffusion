@@ -186,7 +186,7 @@ class StableDiffusion(ComposerModel):
         # Forward through the model
         if attention_mask is not None:
             print('Changing mask type!!!!')
-            attention_mask = attention_mask.bool()
+            attention_mask = (1 - attention_mask.to(conditioning.dtype)) * -10000.0
             print(attention_mask.dtype)
         return self.unet(noised_latents, timesteps, conditioning,
                          encoder_attention_mask=attention_mask)['sample'], noise, timesteps
