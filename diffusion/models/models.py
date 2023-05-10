@@ -104,7 +104,7 @@ def stable_diffusion_2(
     )
     if torch.cuda.is_available():
         model = DeviceGPU().module_to_device(model)
-        if is_xformers_installed:
-            model.unet.enable_xformers_memory_efficient_attention()
-            model.vae.enable_xformers_memory_efficient_attention()
+        # if is_xformers_installed:
+        # model.unet.enable_xformers_memory_efficient_attention()
+        # model.vae.enable_xformers_memory_efficient_attention()
     return model
