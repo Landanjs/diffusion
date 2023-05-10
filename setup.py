@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 install_requires = [
     'accelerate',
     'mosaicml@git+https://github.com/mosaicml/composer.git@6cf3d3a1aa300834c650f89460b5ac9bbc5a1e46',
-    'mosaicml-streaming>=0.4.0,<1.0',
+    'mosaicml-streaming>=0.4.1,<1.0',
     'hydra-core>=1.2',
     'hydra-colorlog>=1.1.0',
     'diffusers@git+https://github.com/Birch-san/diffusers.git@cross_attn_mask_3',
