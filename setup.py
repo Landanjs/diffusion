@@ -14,7 +14,7 @@ install_requires = [
     'diffusers@git+https://github.com/Birch-san/diffusers.git@cross_attn_mask_3',
     'transformers[torch]',
     'wandb',
-    'xformers==0.0.16',
+    'xformers==0.0.19',
     'triton==2.0.0',
     'torchmetrics[image]',
 ]
