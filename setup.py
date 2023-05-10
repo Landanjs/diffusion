@@ -11,7 +11,7 @@ install_requires = [
     'mosaicml-streaming>=0.4.1,<1.0',
     'hydra-core>=1.2',
     'hydra-colorlog>=1.1.0',
-    'diffusers@git+https://github.com/Birch-san/diffusers.git@cross_attn_mask_3',
+    'diffusers@git+https://github.com/Landanjs/diffusers.git@cross_attn_mask_3',
     #'diffusers[torch]',
     'transformers[torch]',
     'wandb',
