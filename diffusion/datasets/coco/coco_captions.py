@@ -86,7 +86,7 @@ class StreamingCOCOCaption(StreamingDataset):
             captions = random.sample(sample['captions'], k=1)[0]
         else:
             raise ValueError(f'Invalid caption selection: {self.caption_selection}. Must be one of [random, first].')
-        tokenized = self.tokenizer(captions, padding='max_length', truncation=True, return_tensors='pt')
+        tokenized = self.tokenizer(captions, padding='max_length', truncation=True, return_tensors='pt', max_length=72)
         return {'image': image, 'captions': tokenized['input_ids'][0], 'attention_mask': tokenized['attention_mask'][0]}
 
 

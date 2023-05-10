@@ -95,7 +95,7 @@ class StreamingLAIONDataset(StreamingDataset):
         tokenized_caption = self.tokenizer(
             caption,
             padding='max_length',
-            max_length=self.tokenizer.model_max_length,
+            max_length=72,
             truncation=True,
         )
         input_ids = torch.tensor(tokenized_caption['input_ids'])
