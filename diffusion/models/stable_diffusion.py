@@ -406,7 +406,7 @@ class StableDiffusion(ComposerModel):
             if tokenized_prompts is None:
                 tokenized = self.tokenizer(prompt,
                                            padding='max_length',
-                                           max_length=self.tokenizer.model_max_length,
+                                           max_length=80,
                                            truncation=True,
                                            return_tensors='pt')
                 tokenized_prompts = tokenized['input_ids'].to(device)
