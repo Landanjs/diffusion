@@ -166,7 +166,10 @@ class StableDiffusion(ComposerModel):
                     # Encode prompt into conditioning vector
                     latents = self.vae.encode(inputs.half())['latent_dist'].sample().data
                     conditioning = self.text_encoder(conditioning,
-                                                     output_hidden_states=True)[-2]  # Should be (batch_size, 77, 768)
+                                                     output_hidden_states=True)  # Should be (batch_size, 77, 768)
+                    print(conditioning)
+                    conditioning = conditioning[1][-2]
+                    print(conditioning.shape)
 
             else:
                 latents = self.vae.encode(inputs)['latent_dist'].sample().data
