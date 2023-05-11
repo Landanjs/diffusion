@@ -165,11 +165,12 @@ class StableDiffusion(ComposerModel):
                     # Encode the images to the latent space.
                     # Encode prompt into conditioning vector
                     latents = self.vae.encode(inputs.half())['latent_dist'].sample().data
-                    conditioning = self.text_encoder(conditioning)[0]  # Should be (batch_size, 77, 768)
+                    conditioning = self.text_encoder(
+                        conditioning, output_hidden_states=True)[1][-2]  # Should be (batch_size, 77, 768)
 
             else:
                 latents = self.vae.encode(inputs)['latent_dist'].sample().data
-                conditioning = self.text_encoder(conditioning)[0]
+                conditioning = self.text_encoder(conditioning, output_hidden_states=True)[1][-2]
             # Magical scaling number (See https://github.com/huggingface/diffusers/issues/437#issuecomment-1241827515)
             latents *= 0.18215
 
@@ -391,7 +392,8 @@ class StableDiffusion(ComposerModel):
                                                    max_length=self.tokenizer.model_max_length,
                                                    truncation=True,
                                                    return_tensors='pt').input_ids
-            text_embeddings = self.text_encoder(tokenized_prompts.to(device))[0]  # type: ignore
+            text_embeddings = self.text_encoder(tokenized_prompts.to(device),
+                                                output_hidden_states=True)[1][-2]  # type: ignore
         else:
             text_embeddings = prompt_embeds
 
