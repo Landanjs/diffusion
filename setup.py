@@ -12,7 +12,7 @@ install_requires = [
     'hydra-core>=1.2',
     'hydra-colorlog>=1.1.0',
     #'diffusers[torch]',
-    'diffusers@git+https://github.com/Landanjs/diffusers.git@attn_ln',
+    'diffusers@git+https://github.com/Landanjs/diffusers.git@attn_ln2',
     'transformers[torch]',
     'wandb',
     'xformers==0.0.16',
