@@ -96,8 +96,8 @@ class StableDiffusion(ComposerModel):
         self.image_latents_key = image_latents_key
         self.precomputed_latents = precomputed_latents
 
-        self.text_encoder_norm = torch.nn.LayerNorm(self.text_encoder.text_model.config.hidden_size,
-                                                    eps=self.text_encoder.text_model.config.layer_norm_eps)
+        self.text_encoder_norm = torch.nn.LayerNorm(text_encoder.text_model.config.hidden_size,
+                                                    eps=text_encoder.text_model.config.layer_norm_eps)
 
         # setup metrics
         if train_metrics is None:
