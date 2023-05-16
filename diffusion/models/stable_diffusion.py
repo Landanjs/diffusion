@@ -96,8 +96,8 @@ class StableDiffusion(ComposerModel):
         self.image_latents_key = image_latents_key
         self.precomputed_latents = precomputed_latents
 
-        self.text_encoder_norm = torch.nn.LayerNorm(text_encoder.text_model.config.hidden_size,
-                                                    eps=text_encoder.text_model.config.layer_norm_eps)
+        #self.text_encoder_norm = torch.nn.LayerNorm(text_encoder.text_model.config.hidden_size,
+        #                                            eps=text_encoder.text_model.config.layer_norm_eps)
 
         # setup metrics
         if train_metrics is None:
@@ -174,7 +174,7 @@ class StableDiffusion(ComposerModel):
             else:
                 latents = self.vae.encode(inputs)['latent_dist'].sample().data
                 conditioning = self.text_encoder(conditioning, output_hidden_states=True)[2][-2]
-            conditioning = self.text_encoder_norm(conditioning)  # Add at least one layer norm...
+            #conditioning = self.text_encoder_norm(conditioning)  # Add at least one layer norm...
             # Magical scaling number (See https://github.com/huggingface/diffusers/issues/437#issuecomment-1241827515)
             latents *= 0.18215
 
