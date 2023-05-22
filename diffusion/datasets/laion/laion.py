@@ -33,6 +33,10 @@ class StreamingLAIONDataset(StreamingDataset):
         tokenizer_name_or_path (str): The name or path of the tokenizer to use. Default: ``'stabilityai/stable-diffusion-2-base'``.
         transform (Optional[Callable]): The transforms to apply to the image. Default: ``None``.
         predownload (Optional[int]): The number of samples to prefetch. Default: ``100_000``.
+        cache_limit (Optional[int]): Maximum size in bytes of this StreamingDataset's shard cache.
+            Before downloading a shard, the least recently used resident shard(s) may be evicted
+            (deleted from the local cache) in order to stay under the limit. Set to ``None`` to
+            disable shard eviction. Defaults to ``None``.
         download_retry (Optional[int]): The number of times to retry a download. Default: ``2``.
         download_timeout (Optional[float]): The timeout for a download. Default: ``120``.
         batch_size (Optional[int]): Hint batch_size that will be used on each device's DataLoader. Default: ``None``.
@@ -51,6 +55,7 @@ class StreamingLAIONDataset(StreamingDataset):
         caption_drop_prob: Optional[float] = 0.0,
         transform: Optional[Callable] = None,
         predownload: Optional[int] = 100_000,
+        cache_limit: Optional[int] = None,
         download_retry: Optional[int] = 2,
         download_timeout: Optional[float] = 120,
         batch_size: Optional[int] = None,
@@ -65,6 +70,7 @@ class StreamingLAIONDataset(StreamingDataset):
             split=split,
             shuffle=shuffle,
             predownload=predownload,
+            cache_limit=cache_limit,
             keep_zip=False,
             download_retry=download_retry,
             download_timeout=download_timeout,
@@ -121,6 +127,7 @@ def build_streaming_laion_dataloader(
     resize_size: int = 256,
     num_samples: Optional[int] = None,
     predownload: Optional[int] = 100_000,
+    cache_limit: Optional[int] = None,
     download_retry: Optional[int] = 2,
     download_timeout: Optional[float] = 120,
     drop_last: bool = True,
@@ -139,6 +146,10 @@ def build_streaming_laion_dataloader(
         resize_size (int): The size to resize the image to. Default: ``256``.
         num_samples (Optional[int]): The number of samples to use. Default: ``None`` uses all available samples.
         predownload (Optional[int]): The number of samples to prefetch. Default: ``100_000``.
+        cache_limit (Optional[int]): Maximum size in bytes of this StreamingDataset's shard cache.
+            Before downloading a shard, the least recently used resident shard(s) may be evicted
+            (deleted from the local cache) in order to stay under the limit. Set to ``None`` to
+            disable shard eviction. Defaults to ``None``.
         download_retry (Optional[int]): The number of times to retry a download. Default: ``2``.
         download_timeout (Optional[float]): The timeout for a download. Default: ``120``.
         drop_last (bool): Whether to drop the last batch if it is incomplete. Default: ``True``.
@@ -173,6 +184,7 @@ def build_streaming_laion_dataloader(
         caption_drop_prob=caption_drop_prob,
         transform=transform,
         predownload=predownload,
+        cache_limit=cache_limit,
         download_retry=download_retry,
         download_timeout=download_timeout,
         batch_size=batch_size,
