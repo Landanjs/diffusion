@@ -41,6 +41,7 @@ class StreamingLAIONDataset(StreamingDataset):
         download_timeout (Optional[float]): The timeout for a download. Default: ``120``.
         batch_size (Optional[int]): Hint batch_size that will be used on each device's DataLoader. Default: ``None``.
         image_size (Optional[int]): The size to resize the image to. Default: ``None``.
+        shuffle_block_size (int): Unit of shuffle. Defaults to ``1 << 18``.
         num_canonical_nodes (int, optional): The number of canonical nodes for shuffle. Default: ``None``.
     """
 
@@ -60,6 +61,7 @@ class StreamingLAIONDataset(StreamingDataset):
         download_timeout: Optional[float] = 120,
         batch_size: Optional[int] = None,
         image_size: Optional[int] = None,
+        shuffle_block_size: int = 1 << 18,
         num_canonical_nodes: Optional[int] = None,
     ) -> None:
 
@@ -76,6 +78,7 @@ class StreamingLAIONDataset(StreamingDataset):
             download_timeout=download_timeout,
             validate_hash=None,
             batch_size=batch_size,
+            shuffle_block_size=shuffle_block_size,
             num_canonical_nodes=num_canonical_nodes,
         )
 
@@ -132,6 +135,7 @@ def build_streaming_laion_dataloader(
     download_timeout: Optional[float] = 120,
     drop_last: bool = True,
     shuffle: bool = True,
+    shuffle_block_size: int = 1 << 18,
     num_canonical_nodes: Optional[int] = None,
     **dataloader_kwargs,
 ):
@@ -154,6 +158,7 @@ def build_streaming_laion_dataloader(
         download_timeout (Optional[float]): The timeout for a download. Default: ``120``.
         drop_last (bool): Whether to drop the last batch if it is incomplete. Default: ``True``.
         shuffle (bool): Whether to shuffle the samples in this dataset. Default: ``True``.
+        shuffle_block_size (int): Unit of shuffle. Defaults to ``1 << 18``.
         num_canonical_nodes (int, optional): The number of canonical nodes for shuffle. Default: ``None``.
         **dataloader_kwargs: Additional arguments to pass to the dataloader.
     """
@@ -189,6 +194,7 @@ def build_streaming_laion_dataloader(
         download_timeout=download_timeout,
         batch_size=batch_size,
         image_size=resize_size,
+        shuffle_block_size=shuffle_block_size,
         num_canonical_nodes=num_canonical_nodes,
     )
     # Create a subset of the dataset
