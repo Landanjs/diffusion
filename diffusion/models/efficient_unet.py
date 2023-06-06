@@ -1,3 +1,6 @@
+# Copyright 2022 MosaicML Diffusion authors
+# SPDX-License-Identifier: Apache-2.0
+
 import math
 from typing import Tuple
 
@@ -59,7 +62,8 @@ class ResNetBlock(nn.Module):
 
 class DownBlock(nn.Module):
 
-    def __init__(self, is_downsample: bool, num_resnet_blocks: int)
+    def __init__(self, is_downsample: bool, num_resnet_blocks: int):
+        pass
 
 class UNetTextConditional(nn.Module):
 
@@ -167,6 +171,15 @@ class UNetTextConditional(nn.Module):
             t_embed = t_embed + text_hiddens
 
             # NOTE: Replace pooled embedding for the dropped captions with a learned embedding (null_text_hidden)
+
+
+        # TODO: Concatenate time tokens and text tokens, then normalize
+
+        # TODO: Initial Resnet block for memory efficient? Where is this stated?
+
+        # Downsample blocks -> pre_downsample, init_block, resnet_blocks, attn_block, post_downsample
+        # TODO: why is there an init_block? init_block as the cross attention in between the first and second block within a resnetblock
+        # the attn_block at the end of the block is for self-attention, but it is also cross-attention???
 
 
 
