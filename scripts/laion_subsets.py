@@ -217,9 +217,6 @@ def main(args: Namespace) -> None:
         'jpg': 'bytes',
         'hash': 'int64',
         'aesthetic_score': 'float64',
-        'caption_latents': 'bytes',
-        'latents_256': 'bytes',
-        'latents_512': 'bytes',
     }
 
     # We split each bucket into 8 copies for each GPU per node
