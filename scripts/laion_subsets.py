@@ -51,6 +51,7 @@ class StreamingLAIONDataset(StreamingDataset):
             download_retry=download_retry,
             download_timeout=download_timeout,
             validate_hash=None,
+            cache_limit=3_000_000_000_000,
             batch_size=batch_size,
         )
 
