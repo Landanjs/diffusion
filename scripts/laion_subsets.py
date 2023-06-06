@@ -237,12 +237,15 @@ def main(args: Namespace) -> None:
                                       max_workers=64)
 
     count = 0
-    for batch in enumerate(tqdm(dataloader)):
-        sample = batch[1]
+    curr_subset = 0
+    for batch in tqdm(dataloader):
+        sample = batch
         if count == 0:
             print(f'CHECK SAMPLE LENGTH: {len(sample["jpg"])}')
         for i in range(len(sample['jpg'])):
             count += 1
+            if count % 1_000 == 0:
+                print(count)
             curr_subset = count // num_samples_per_subset
 
             mds_sample = {
@@ -275,9 +278,14 @@ def main(args: Namespace) -> None:
                 raise ValueError(f'This sample is too large! {count}')
 
             writers[curr_subset][res].write(mds_sample)
-    for i in range(num_subsets):
-        for r in resolutions:
-            writers[i][r].finish()
+            if count % num_samples_per_subset == 0:
+                for r in resolutions:
+                    writers[curr_subset - 1][r].finish()
+
+            if curr_subset == num_subsets:
+                break
+        if curr_subset == num_subsets:
+            break
 
 
 if __name__ == '__main__':
