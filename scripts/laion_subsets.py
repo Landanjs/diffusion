@@ -3,7 +3,6 @@
 
 """Tag LAION with latents."""
 
-import os
 from argparse import ArgumentParser, Namespace
 from typing import List, Optional, Sequence, Union
 
@@ -242,6 +241,7 @@ def main(args: Namespace) -> None:
 
     count = 0
     for batch in enumerate(tqdm(dataloader)):
+        print(batch)
         sample = batch
         if count == 0:
             print(f'CHECK SAMPLE LENGTH: {len(sample["jpg"])}')
