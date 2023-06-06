@@ -241,8 +241,7 @@ def main(args: Namespace) -> None:
 
     count = 0
     for batch in enumerate(tqdm(dataloader)):
-        print(batch)
-        sample = batch
+        sample = batch[1]
         if count == 0:
             print(f'CHECK SAMPLE LENGTH: {len(sample["jpg"])}')
         for i in range(len(sample['jpg'])):
