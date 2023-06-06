@@ -224,7 +224,7 @@ def main(args: Namespace) -> None:
 
     # We split each bucket into 8 copies for each GPU per node
     num_subsets = 10
-    num_samples_per_subset = 10e6
+    num_samples_per_subset = 10_000_000
     resolutions = ['256-512', '512-768', '768-1024', '1024-1048576']
     writers = []
     for i in range(num_subsets):
