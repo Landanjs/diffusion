@@ -3,6 +3,7 @@
 
 """Tag LAION with latents."""
 
+import os
 from argparse import ArgumentParser, Namespace
 from typing import List, Optional, Sequence, Union
 
@@ -11,58 +12,13 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-class StreamingLAIONDataset(StreamingDataset):
-    """Implementation of the LAION dataset as a streaming dataset except with metadata.
-
-    Args:
-        streams (Sequence[Stream], optional): One or more Streams to stream/cache samples from. StreamingLAIONDataset
-            uses either ``streams`` or ``remote``/``local``. Default:``None``.
-        remote (str, optional): Remote directory (S3 or local filesystem) where dataset is stored. Default: ``None``.
-        local (str, optional): Local filesystem directory where dataset is cached during operation. Default: ``None``.
-        split (str, optional): The dataset split to use. Currently, only ``None`` is supported. Default: ``None``.
-        shuffle (bool): Whether to shuffle the samples in this dataset. Default: ``False``.
-        tokenizer_name_or_path (str): The name or path of the tokenizer to use. Default: ``'stabilityai/stable-diffusion-2-base'``.
-        transform (Optional[Union[Callable, List[Callable]]]): The transforms to apply to the image. Default: ``None``.
-        predownload (Optional[int]): The number of samples to prefetch. Default: ``100_000``.
-        download_retry (Optional[int]): The number of times to retry a download. Default: ``2``.
-        download_timeout (Optional[float]): The timeout for a download. Default: ``120``.
-        batch_size (Optional[int]): Hint batch_size that will be used on each device's DataLoader. Default: ``None``.
-    """
-
-    def __init__(self,
-                 streams: Optional[Sequence[Stream]] = None,
-                 remote: Optional[str] = None,
-                 local: Optional[str] = None,
-                 split: Optional[str] = None,
-                 shuffle: Optional[bool] = False,
-                 predownload: Optional[int] = 100_000,
-                 download_retry: Optional[int] = 2,
-                 download_timeout: Optional[float] = 120,
-                 batch_size: Optional[int] = None) -> None:
-
-        super().__init__(
-            streams=streams,
-            remote=remote,
-            local=local,
-            split=split,
-            shuffle=shuffle,
-            predownload=predownload,
-            keep_zip=False,
-            download_retry=download_retry,
-            download_timeout=download_timeout,
-            validate_hash=None,
-            cache_limit=3_000_000_000_000,
-            batch_size=batch_size,
-        )
-
-
 def build_streaming_laion_dataloader(
     remote: Union[str, List],
     local: Union[str, List],
     batch_size: int,
-    predownload: Optional[int] = 100_000,
-    download_retry: Optional[int] = 2,
-    download_timeout: Optional[float] = 120,
+    predownload: int = 100_000,
+    download_retry: int = 2,
+    download_timeout: float = 120,
     drop_last: bool = True,
     shuffle: bool = True,
     **dataloader_kwargs,
@@ -102,18 +58,18 @@ def build_streaming_laion_dataloader(
     for r, l in zip(remote, local):
         streams.append(Stream(remote=r, local=l, download_retry=download_retry, download_timeout=download_timeout))
 
-    dataset = StreamingLAIONDataset(
+    dataset = StreamingDataset(
         streams=streams,
         split=None,
         shuffle=shuffle,
         predownload=predownload,
+        keep_zip=False,
         download_retry=download_retry,
         download_timeout=download_timeout,
+        validate_hash=None,
+        cache_limit=3_000_000_000_000,
         batch_size=batch_size,
     )
-    # Create a subset of the dataset
-    # if num_samples is not None:
-    #     dataset = torch.utils.data.Subset(dataset, range(num_samples))  # type: ignore
 
     dataloader = DataLoader(
         dataset=dataset,
@@ -133,13 +89,9 @@ def parse_args() -> Namespace:
         Namespace: Command-line arguments.
     """
     args = ArgumentParser()
-    # args.add_argument('--local', type=str, required=True, help='Local directory to store shards.')
-    # args.add_argument('--remote_download',
-    #                   type=str,
-    #                   default='',
-    #                   help='Remote path to download MDS-formatted shards to.')
+    args.add_argument('--num_subsets', type=int, help='Number of subsets to create')
+    args.add_argument('--num_samples_per_subset', type=int, help='Number of samples in each subsets')
     args.add_argument('--remote_upload', type=str, default='', help='Remote path to upload MDS-formatted shards to.')
-    # args.add_argument('--bucket', type=int, help='Bucket index under remote path.')
     args.add_argument('--batch-size', type=int, default=64, help='Batch size to use for encoding.')
     return args.parse_args()
 
@@ -220,15 +172,12 @@ def main(args: Namespace) -> None:
         'aesthetic_score': 'float64',
     }
 
-    # We split each bucket into 8 copies for each GPU per node
-    num_subsets = 10
-    num_samples_per_subset = 10_000_000
     resolutions = ['256-512', '512-768', '768-1024', '1024-1048576']
     writers = []
-    for i in range(num_subsets):
+    for i in range(args.num_subsets):
         writers.append({})
         for r in resolutions:
-            name = f'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/10m-subsets/{i}/{r}'
+            name = os.path.join(args.remote_upload, i, r)
             print(name)
             writers[i][r] = MDSWriter(out=name,
                                       columns=columns,
@@ -241,14 +190,12 @@ def main(args: Namespace) -> None:
     curr_subset = 0
     for batch in tqdm(dataloader):
         sample = batch
-        if count == 0:
-            print(f'CHECK SAMPLE LENGTH: {len(sample["jpg"])}')
         for i in range(len(sample['jpg'])):
-            count += 1
             if count % 1_000 == 0:
                 print(count)
-            curr_subset = count // num_samples_per_subset
-
+            curr_subset = count // args.num_samples_per_subset
+            if curr_subset == args.num_subsets:
+                break
             mds_sample = {
                 'punsafe': sample['punsafe'][i],
                 'pwatermark': sample['pwatermark'][i],
@@ -279,14 +226,9 @@ def main(args: Namespace) -> None:
                 raise ValueError(f'This sample is too large! {count}')
 
             writers[curr_subset][res].write(mds_sample)
-            if count % num_samples_per_subset == 0:
+            if (count + 1) % args.num_samples_per_subset == 0:
                 for r in resolutions:
-                    writers[curr_subset - 1][r].finish()
-
-            if curr_subset == num_subsets:
-                break
-        if curr_subset == num_subsets:
-            break
+                    writers[curr_subset][r].finish()
 
 
 if __name__ == '__main__':
