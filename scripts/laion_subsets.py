@@ -177,7 +177,7 @@ def main(args: Namespace) -> None:
     for i in range(args.num_subsets):
         writers.append({})
         for r in resolutions:
-            name = os.path.join(args.remote_upload, i, r)
+            name = os.path.join(args.remote_upload, str(i), r)
             print(name)
             writers[i][r] = MDSWriter(out=name,
                                       columns=columns,
