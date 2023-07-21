@@ -226,7 +226,8 @@ def main(args: Namespace) -> None:
                 raise ValueError(f'This sample is too large! {count}')
 
             writers[curr_subset][res].write(mds_sample)
-            if (count + 1) % args.num_samples_per_subset == 0:
+            count += 1
+            if count % args.num_samples_per_subset == 0:
                 for r in resolutions:
                     writers[curr_subset][r].finish()
 
