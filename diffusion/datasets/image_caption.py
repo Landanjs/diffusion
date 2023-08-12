@@ -157,6 +157,9 @@ def build_streaming_image_caption_dataloader(
         streams.append(Stream(remote=r, local=l))
 
     # Setup the transforms to apply
+    print('TRANSFORM', transform)
+    print('TRANSFORM', transform)
+    print('TRANSFORM', transform)
     if transform is None:
         transform = [
             LargestCenterSquare(resize_size),
@@ -164,6 +167,9 @@ def build_streaming_image_caption_dataloader(
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # # Normalize from 0 to 1 to -1 to 1
         ]
     transform = transforms.Compose(transform)
+    print('TRANSFORM', transform)
+    print('TRANSFORM', transform)
+    print('TRANSFORM', transform)
     assert isinstance(transform, Callable)
 
     dataset = StreamingImageCaptionDataset(
