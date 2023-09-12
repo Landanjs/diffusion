@@ -23,11 +23,11 @@ class NoOpModel(ComposerModel):
         self.weight = torch.nn.Linear(in_features=1, out_features=16)
 
     def loss(self, outputs: torch.Tensor, batch):
-        y = torch.randn_like(self.weight)
+        y = torch.randn_like(self.weight.weight)
         return F.mse_loss(outputs, y)
 
     def forward(self, batch):
-        input = torch.randn_like(self.weight).sum()
+        input = torch.randn_like(self.weight.weight).sum()
         return self.weight(input)
 
     def get_metrics(self, is_train: bool) -> Dict[str, Metric]:
