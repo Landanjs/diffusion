@@ -27,7 +27,7 @@ class NoOpModel(ComposerModel):
         return F.mse_loss(outputs, y)
 
     def forward(self, batch):
-        input = torch.randn_like(self.weight.weight).sum()
+        input = torch.randn_like(self.weight.weight).sum().unsqueeze(0)
         return self.weight(input)
 
     def get_metrics(self, is_train: bool) -> Dict[str, Metric]:
