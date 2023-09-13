@@ -172,8 +172,6 @@ class StableDiffusion(ComposerModel):
             self.text_encoder._fsdp_wrap = False
             self.vae._fsdp_wrap = False
         #     # self.unet._fsdp_wrap = False
-        #     if self.sdxl:
-        #         self.text_encoder_2._fsdp_wrap = False
 
     def fsdp_wrap_fn(self, module):
         print('FSDP policy:', type(module), isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D)))

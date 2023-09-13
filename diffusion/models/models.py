@@ -35,6 +35,7 @@ def zero_module(module):
 class SDXLTextEncoder(torch.nn.Module):
 
     def __init__(self, model_name, encode_latents_in_fp16):
+        super().__init__()
         torch_dtype = torch.float16 if encode_latents_in_fp16 else None
         self.text_encoder1 = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder', torch_dtype=torch_dtype)
         self.text_encoder2 = CLIPTextModelWithProjection.from_pretrained(model_name,
