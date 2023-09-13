@@ -256,16 +256,15 @@ class StableDiffusion(ComposerModel):
 
         added_cond_kwargs = {}
         # if using SDXL, prepare added time ids & embeddings
-        if self.sdxl:
-            # TODO double check cond_crops_coords_top_left calc in transforms.py
-            add_time_ids = torch.cat(
-                [batch['cond_original_size'], batch['cond_crops_coords_top_left'], batch['cond_target_size']], dim=1)
-            add_text_embeds = pooled_conditioning
-            added_cond_kwargs = {'text_embeds': add_text_embeds, 'time_ids': add_time_ids}
+        # if self.sdxl:
+        #     # TODO double check cond_crops_coords_top_left calc in transforms.py
+        #     add_time_ids = torch.cat(
+        #         [batch['cond_original_size'], batch['cond_crops_coords_top_left'], batch['cond_target_size']], dim=1)
+        #     add_text_embeds = pooled_conditioning
+        #     added_cond_kwargs = {'text_embeds': add_text_embeds, 'time_ids': add_time_ids}
 
         # Forward through the model
-        return self.unet(noised_latents, timesteps, conditioning,
-                         added_cond_kwargs=added_cond_kwargs)['sample'], targets, timesteps
+        return self.unet(noised_latents, timesteps, conditioning)['sample'], targets, timesteps
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
