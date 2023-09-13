@@ -96,7 +96,8 @@ def stable_diffusion_xl(
 
         # note: local only
         # config[0]['block_out_channels'] = [32, 32, 1280]  # make smaller and more manageable for local debug
-
+        config[0]["addition_embed_type"] = None
+        config[0]["addition_time_embed_dim"] = None
         unet = UNet2DConditionModel(**config[0])
 
         # zero out some params at init
