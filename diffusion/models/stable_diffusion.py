@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from composer.models import ComposerModel
 from torchmetrics import MeanSquaredError, Metric
 from tqdm.auto import tqdm
+from diffusers.models.unet_2d_blocks import UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D
 
 
 class StableDiffusion(ComposerModel):
@@ -172,16 +173,16 @@ class StableDiffusion(ComposerModel):
             self.vae.half()
             if self.sdxl:
                 self.text_encoder_2.half()
-        if fsdp:
-            # only wrap models we are training
-            self.text_encoder._fsdp_wrap = False
-            self.vae._fsdp_wrap = False
-            # self.unet._fsdp_wrap = False
-            if self.sdxl:
-                self.text_encoder_2._fsdp_wrap = False
+        # if fsdp:
+        #     # only wrap models we are training
+        #     self.text_encoder._fsdp_wrap = False
+        #     self.vae._fsdp_wrap = False
+        #     # self.unet._fsdp_wrap = False
+        #     if self.sdxl:
+        #         self.text_encoder_2._fsdp_wrap = False
 
-    # def fsdp_wrap_fn(self, module):
-        # pass
+    def fsdp_wrap_fn(self, module):
+        return isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D)):
 
     def forward(self, batch):
         latents, conditioning = None, None
