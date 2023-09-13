@@ -37,18 +37,20 @@ class SDXLTextEncoder(torch.nn.Module):
     def __init__(self, model_name, encode_latents_in_fp16):
         super().__init__()
         torch_dtype = torch.float16 if encode_latents_in_fp16 else None
-        self.text_encoder1 = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder', torch_dtype=torch_dtype)
-        self.text_encoder2 = CLIPTextModelWithProjection.from_pretrained(model_name,
-                                                                        subfolder='text_encoder_2',
-                                                                        torch_dtype=torch_dtype)
+        # self.text_encoder1 = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder', torch_dtype=torch_dtype)
+        # self.text_encoder2 = CLIPTextModelWithProjection.from_pretrained(model_name,
+        #                                                                 subfolder='text_encoder_2',
+        #                                                                 torch_dtype=torch_dtype)
 
     def forward(self, text):
-        conditioning1 = self.text_encoder1(text[0], output_hidden_states=True).hidden_states[-2]
-        text_encoder2_out = self.text_encoder2(text[1], output_hidden_states=True)
-        pooled_conditioning = text_encoder2_out[0]
-        conditioning2 = text_encoder2_out.hidden_states[-2]
+        # conditioning1 = self.text_encoder1(text[0], output_hidden_states=True).hidden_states[-2]
+        # text_encoder2_out = self.text_encoder2(text[1], output_hidden_states=True)
+        # pooled_conditioning = text_encoder2_out[0]
+        # conditioning2 = text_encoder2_out.hidden_states[-2]
 
-        conditioning = torch.concat([conditioning1, conditioning2], dim=-1)
+        # conditioning = torch.concat([conditioning1, conditioning2], dim=-1)
+        conditioning = torch.randn(text[0].shape[0], 77, 2048, device=text[0].device)
+        pooled_conditioning = torch.randn(text[0].shape[0], 1280, device=text[0].device)
         return conditioning, pooled_conditioning
 
 def stable_diffusion_xl(
