@@ -32,6 +32,24 @@ def zero_module(module):
         p.detach().zero_()
     return module
 
+class SDXLTextEncoder(torch.nn.Module):
+
+    def __init__(self, model_name, encode_latents_in_fp16):
+        torch_dtype = torch.float16 if encode_latents_in_fp16 else None
+        self.text_encoder1 = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder', torch_dtype=torch_dtype)
+        self.text_encoder2 = CLIPTextModelWithProjection.from_pretrained(model_name,
+                                                                        subfolder='text_encoder_2',
+                                                                        torch_dtype=torch_dtype)
+
+    def forward(self, text):
+        conditioning1 = self.text_encoder1(text[0], output_hidden_states=True).hidden_states[-2]
+        text_encoder2_out = self.text_encoder2(text[1], output_hidden_states=True)
+        pooled_conditioning = text_encoder2_out[0]
+        conditioning2 = text_encoder2_out.hidden_states[-2]
+
+        conditioning = torch.concat([conditioning1, conditioning2], dim=-1)
+        return conditioning, pooled_conditioning
+
 def stable_diffusion_xl(
     model_name: str = 'stabilityai/stable-diffusion-xl-base-1.0',
     unet_model_name: str = 'stabilityai/stable-diffusion-xl-base-1.0',
@@ -183,18 +201,13 @@ def stable_diffusion_xl(
             vae = AutoencoderKL.from_pretrained(vae_model_name, subfolder='vae', torch_dtype=torch.float16)
         except:  # for handling SDXL vae fp16 fixed checkpoint
             vae = AutoencoderKL.from_pretrained(vae_model_name, torch_dtype=torch.float16)
-        text_encoder = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder', torch_dtype=torch.float16)
-        text_encoder_2 = CLIPTextModelWithProjection.from_pretrained(model_name,
-                                                                     subfolder='text_encoder_2',
-                                                                     torch_dtype=torch.float16)
         # import pdb;pdb.set_trace()
     else:
         try:
             vae = AutoencoderKL.from_pretrained(vae_model_name, subfolder='vae')
         except: #  for handling SDXL vae fp16 fixed checkpoint
             vae = AutoencoderKL.from_pretrained(vae_model_name)
-        text_encoder = CLIPTextModel.from_pretrained(model_name, subfolder='text_encoder')
-        text_encoder_2 = CLIPTextModelWithProjection.from_pretrained(model_name, subfolder='text_encoder_2')
+    text_encoder = SDXLTextEncoder(model_name=model_name, encode_latents_in_fp16=encode_latents_in_fp16)
 
     tokenizer = CLIPTokenizer.from_pretrained(model_name, subfolder='tokenizer')
     tokenizer_2 = CLIPTokenizer.from_pretrained(model_name, subfolder='tokenizer_2')
@@ -208,7 +221,6 @@ def stable_diffusion_xl(
         tokenizer=tokenizer,
         noise_scheduler=noise_scheduler,
         inference_noise_scheduler=inference_noise_scheduler,
-        text_encoder_2=text_encoder_2,
         tokenizer_2=tokenizer_2,
         prediction_type=prediction_type,
         train_metrics=train_metrics,

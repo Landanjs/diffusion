@@ -196,50 +196,29 @@ class StableDiffusion(ComposerModel):
             inputs, conditioning = batch[self.image_key], batch[self.text_key]
             # TODO should we mask empty captions during training?
             conditioning = conditioning.view(-1, conditioning.shape[-1])
+            if self.sdxl:
+                conditioning_2 = batch[self.text_key_2]
+                conditioning_2 = conditioning_2.view(-1, conditioning_2.shape[-1])
+                conditioning = (conditioning, conditioning_2)
+
             if self.encode_latents_in_fp16:
                 # Disable autocast context as models are in fp16
                 with torch.cuda.amp.autocast(enabled=False):
                     # Encode the images to the latent space.
                     # Encode prompt into conditioning vector
                     latents = self.vae.encode(inputs.half())['latent_dist'].sample().data
-
+                    text_encoder_out = self.text_encoder(conditioning)
+                    conditioning = text_encoder_out[0]
+                    pooled_conditioning = None
                     if self.sdxl:
-                        # first text encoder
-                        conditioning = self.text_encoder(conditioning, output_hidden_states=True).hidden_states[-2]
-                        # second text encoder
-                        conditioning_2 = batch[self.text_key_2]
-                        conditioning_2 = conditioning_2.view(-1, conditioning_2.shape[-1])
-                        text_encoder_2_out = self.text_encoder_2(conditioning_2, output_hidden_states=True)
-                        pooled_conditioning = text_encoder_2_out[0]  # (batch_size, 1280)
-                        conditioning_2 = text_encoder_2_out.hidden_states[-2]  # (batch_size, 77, 1280)
-
-                        # zero out the appropriate things
-                        if batch[self.text_key].sum() == 0:
-                            conditioning = torch.zeros_like(conditioning)
-                        if batch[self.text_key_2].sum() == 0:
-                            conditioning_2 = torch.zeros_like(conditioning_2)
-                            pooled_conditioning = torch.zeros_like(pooled_conditioning)
-
-                        conditioning = torch.concat([conditioning, conditioning_2], dim=-1)
-                    else:
-                        conditioning = self.text_encoder(conditioning)[0]  # Should be (batch_size, 77, 768)
-                        pooled_conditioning = None
-
+                        pooled_conditioning = text_encoder_out[1]
             else:
                 latents = self.vae.encode(inputs)['latent_dist'].sample().data
+                text_encoder_out = self.text_encoder(conditioning)
+                conditioning = text_encoder_out[0]
+                pooled_conditioning = None
                 if self.sdxl:
-                    # first text encoder
-                    conditioning = self.text_encoder(conditioning, output_hidden_states=True).hidden_states[-2]
-                    # second text encoder
-                    conditioning_2 = batch[self.text_key_2]
-                    conditioning_2 = conditioning_2.view(-1, conditioning_2.shape[-1])
-                    text_encoder_2_out = self.text_encoder_2(conditioning_2, output_hidden_states=True)
-                    pooled_conditioning = text_encoder_2_out[0]  # (batch_size, 1280)
-                    conditioning_2 = text_encoder_2_out.hidden_states[-2]  # (batch_size, 77, 1280)
-                    conditioning = torch.concat([conditioning, conditioning_2], dim=-1)
-                else:
-                    conditioning = self.text_encoder(conditioning)[0]
-                    pooled_conditioning = None
+                    pooled_conditioning = text_encoder_out[1]
             # Magical scaling number (See https://github.com/huggingface/diffusers/issues/437#issuecomment-1241827515)
             latents *= self.latent_scale
 
@@ -261,12 +240,12 @@ class StableDiffusion(ComposerModel):
 
         added_cond_kwargs = {}
         # if using SDXL, prepare added time ids & embeddings
-        # if self.sdxl:
-        #     # TODO double check cond_crops_coords_top_left calc in transforms.py
-        #     add_time_ids = torch.cat(
-        #         [batch['cond_original_size'], batch['cond_crops_coords_top_left'], batch['cond_target_size']], dim=1)
-        #     add_text_embeds = pooled_conditioning
-        #     added_cond_kwargs = {'text_embeds': add_text_embeds, 'time_ids': add_time_ids}
+        if self.sdxl:
+            # TODO double check cond_crops_coords_top_left calc in transforms.py
+            add_time_ids = torch.cat(
+                [batch['cond_original_size'], batch['cond_crops_coords_top_left'], batch['cond_target_size']], dim=1)
+            add_text_embeds = pooled_conditioning
+            added_cond_kwargs = {'text_embeds': add_text_embeds, 'time_ids': add_time_ids}
 
         # Forward through the model
         return self.unet(noised_latents, timesteps, conditioning,
