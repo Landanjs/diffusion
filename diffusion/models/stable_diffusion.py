@@ -182,7 +182,7 @@ class StableDiffusion(ComposerModel):
         #         self.text_encoder_2._fsdp_wrap = False
 
     def fsdp_wrap_fn(self, module):
-        return isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D)):
+        return isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D))
 
     def forward(self, batch):
         latents, conditioning = None, None
