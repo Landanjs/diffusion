@@ -77,7 +77,6 @@ class StableDiffusion(ComposerModel):
                  tokenizer,
                  noise_scheduler,
                  inference_noise_scheduler,
-                 text_encoder_2 = None,
                  tokenizer_2 = None,
                  loss_fn=F.mse_loss,
                  prediction_type: str = 'epsilon',
@@ -153,8 +152,7 @@ class StableDiffusion(ComposerModel):
         self.text_encoder = text_encoder
         self.tokenizer = tokenizer
         if self.sdxl:
-            if text_encoder_2 is not None and tokenizer_2 is not None:
-                self.text_encoder_2 = text_encoder_2
+            if tokenizer_2 is not None:
                 self.tokenizer_2 = tokenizer_2
             else:
                 raise ValueError(f'Missing text_encoder_2 or tokenizer_2 in SDXL')
@@ -166,13 +164,9 @@ class StableDiffusion(ComposerModel):
         # freeze text_encoder during diffusion training
         self.text_encoder.requires_grad_(False)
         self.vae.requires_grad_(False)
-        if self.sdxl:
-            self.text_encoder_2.requires_grad_(False)
         if self.encode_latents_in_fp16:
             self.text_encoder.half()
             self.vae.half()
-            if self.sdxl:
-                self.text_encoder_2.half()
         if fsdp:
         #     # only wrap models we are training
             self.text_encoder._fsdp_wrap = False
@@ -532,27 +526,13 @@ class StableDiffusion(ComposerModel):
                 if prompt == '': # zero out
                     tokenized_prompts = torch.zeros_like(tokenized_prompts)
                     tokenized_prompts_2 = torch.zeros_like(tokenized_prompts_2)
-                    
             if self.sdxl:
-                # text encoder 1
-                text_embeddings = self.text_encoder(tokenized_prompts.to(device), output_hidden_states=True).hidden_states[-2]
-                # text encoder 2
-                text_encoder_2_out = self.text_encoder_2(tokenized_prompts_2.to(device), output_hidden_states=True)
-                pooled_text_embeddings = text_encoder_2_out[0]  # (batch_size, 1280)
-                text_embeddings_2 = text_encoder_2_out.hidden_states[-2]  # (batch_size, 77, 1280)
-
-                # zero out the appropriate things
-                if tokenized_prompts.sum() == 0:
-                    text_embeddings = torch.zeros_like(text_embeddings)
-                if tokenized_prompts_2.sum() == 0:
-                    text_embeddings_2 = torch.zeros_like(text_embeddings_2)
-                    pooled_text_embeddings = torch.zeros_like(pooled_text_embeddings)
-
-                # concat
-                text_embeddings = torch.concat([text_embeddings, text_embeddings_2], dim=-1)
-            else:
-                text_embeddings = self.text_encoder(tokenized_prompts.to(device))[0]  # type: ignore
-                pooled_text_embeddings = None
+                tokenized_prompts = (tokenized_prompts.to(device), tokenized_prompts_2.to(device))
+            text_encoder_out = self.text_encoder(tokenized_prompts)
+            text_embeddings = text_encoder_out[0]
+            pooled_text_embeddings = None
+            if self.sdxl:
+                pooled_text_embeddings = text_encoder_out[1]
         else:
             text_embeddings = prompt_embeds
             if self.sdxl:
