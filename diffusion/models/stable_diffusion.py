@@ -173,10 +173,10 @@ class StableDiffusion(ComposerModel):
             self.vae.half()
             if self.sdxl:
                 self.text_encoder_2.half()
-        # if fsdp:
+        if fsdp:
         #     # only wrap models we are training
-        #     self.text_encoder._fsdp_wrap = False
-        #     self.vae._fsdp_wrap = False
+            self.text_encoder._fsdp_wrap = False
+            self.vae._fsdp_wrap = False
         #     # self.unet._fsdp_wrap = False
         #     if self.sdxl:
         #         self.text_encoder_2._fsdp_wrap = False
