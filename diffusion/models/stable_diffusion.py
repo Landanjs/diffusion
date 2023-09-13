@@ -264,7 +264,8 @@ class StableDiffusion(ComposerModel):
         #     added_cond_kwargs = {'text_embeds': add_text_embeds, 'time_ids': add_time_ids}
 
         # Forward through the model
-        return self.unet(noised_latents, timesteps, conditioning)['sample'], targets, timesteps
+        return self.unet(noised_latents, timesteps, conditioning,
+                         added_cond_kwargs=added_cond_kwargs)['sample'], targets, timesteps
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
