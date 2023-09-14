@@ -11,6 +11,8 @@ from composer.models import ComposerModel
 from torchmetrics import MeanSquaredError, Metric
 from tqdm.auto import tqdm
 from diffusers.models.unet_2d_blocks import UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D
+from diffusers.models.resnet import ResnetBlock2D
+from diffusers.models.transformer_2d import Transformer2DModel
 
 
 class StableDiffusion(ComposerModel):
@@ -174,8 +176,8 @@ class StableDiffusion(ComposerModel):
         #     # self.unet._fsdp_wrap = False
 
     def fsdp_wrap_fn(self, module):
-        print('FSDP policy:', type(module), isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D)))
-        return isinstance(module, (UNetMidBlock2DCrossAttn, CrossAttnUpBlock2D, UpBlock2D, DownBlock2D, CrossAttnDownBlock2D))
+        print('FSDP policy:', type(module), isinstance(module, (UNetMidBlock2DCrossAttn, ResnetBlock2D, Transformer2DModel)))
+        return isinstance(module, (ResnetBlock2D, Transformer2DModel))
 
     def forward(self, batch):
         latents, conditioning = None, None

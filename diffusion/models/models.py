@@ -49,7 +49,7 @@ class SDXLTextEncoder(torch.nn.Module):
         # conditioning2 = text_encoder2_out.hidden_states[-2]
 
         # conditioning = torch.concat([conditioning1, conditioning2], dim=-1)
-        conditioning = torch.randn(text[0].shape[0], 77, 1024, device=text[0].device)
+        conditioning = torch.randn(text[0].shape[0], 77, 2048, device=text[0].device)
         pooled_conditioning = torch.randn(text[0].shape[0], 1280, device=text[0].device)
         return conditioning, pooled_conditioning
 
@@ -119,7 +119,7 @@ def stable_diffusion_xl(
         # config[0]['block_out_channels'] = [32, 32, 1280]  # make smaller and more manageable for local debug
         config[0]["addition_embed_type"] = None
         config[0]["addition_time_embed_dim"] = None
-        config[0]["cross_attention_dim"] = 1024
+        config[0]["cross_attention_dim"] = 2048
         unet = UNet2DConditionModel(**config[0])
 
         # zero out some params at init
