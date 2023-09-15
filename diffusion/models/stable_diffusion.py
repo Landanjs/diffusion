@@ -170,14 +170,10 @@ class StableDiffusion(ComposerModel):
             self.text_encoder.half()
             self.vae.half()
         if fsdp:
-        #     # only wrap models we are training
+            # only wrap models we are training
             self.text_encoder._fsdp_wrap = False
             self.vae._fsdp_wrap = False
-        #     # self.unet._fsdp_wrap = False
-
-    def fsdp_wrap_fn(self, module):
-        print('FSDP policy:', type(module), isinstance(module, (UNetMidBlock2DCrossAttn, ResnetBlock2D, Transformer2DModel)))
-        return isinstance(module, (ResnetBlock2D, Transformer2DModel))
+            self.unet._fsdp_wrap = True
 
     def forward(self, batch):
         latents, conditioning = None, None
