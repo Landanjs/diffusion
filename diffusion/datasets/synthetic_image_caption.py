@@ -35,7 +35,7 @@ class SyntheticImageCaptionDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        return {'image': self.images[idx], 'captions': self.captions[idx]}
+        return {'image': self.images[idx], 'captions': self.captions[idx], 'captions_2': self.captions[idx]}
 
 
 def build_synthetic_image_caption_dataloader(
