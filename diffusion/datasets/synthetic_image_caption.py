@@ -35,7 +35,12 @@ class SyntheticImageCaptionDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        return {'image': self.images[idx], 'captions': self.captions[idx], 'captions_2': self.captions[idx]}
+        return {'image': self.images[idx],
+                'captions': self.captions[idx],
+                'captions_2': self.captions[idx],
+                'cond_original_size': torch.tensor([256., 256.]),
+                'cond_crops_coords_top_left': torch.tensor([0., 0.]),
+                'cond_target_size': torch.tensor([256., 256.])}
 
 
 def build_synthetic_image_caption_dataloader(
