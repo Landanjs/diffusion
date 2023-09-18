@@ -19,12 +19,17 @@ class SyntheticImageCaptionDataset(Dataset):
         num_samples (int): Number of samples in the synthetic dataset. Default: ``100_000``.
     """
 
-    def __init__(self, image_size: int = 512, caption_length: int = 77, num_samples: int = 100_000):
+    def __init__(self, image_size: int = 512, caption_length: int = 77, num_samples: int = 100_000, precompute_img_encoder: bool = False, precompute_txt_encoder: bool = False, txt_embed_dim: int = 1024):
 
         super().__init__()
         self.num_samples = num_samples
-        self.images = torch.randn(num_samples, 3, image_size, image_size)
-        self.captions = torch.randint(0, 128, (num_samples, caption_length), dtype=torch.long)
+        img_channel_dim = 4 if precompute_img_encoder else 3
+        self.images = torch.randn(num_samples, img_channel_dim, image_size, image_size)
+
+        if precompute_txt_encoder:
+            self.captions = torch.randn(num_samples, caption_length, txt_embed_dim)
+        else:
+            self.captions = torch.randint(0, 128, (num_samples, caption_length), dtype=torch.long)
 
     def __len__(self):
         return len(self.images)

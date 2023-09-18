@@ -90,9 +90,8 @@ class StableDiffusion(ComposerModel):
                  image_key: str = 'image',
                  text_key: str = 'captions',
                  text_key_2: str = 'captions_2',
-                 image_latents_key: str = 'image_latents',
-                 text_latents_key: str = 'caption_latents',
-                 precomputed_latents: bool = False,
+                 ignore_img_encoder: bool = False,
+                 ignore_txt_encoder: bool = False,
                  encode_latents_in_fp16: bool = False,
                  fsdp: bool = False,
                  sdxl: bool = False):
@@ -106,8 +105,7 @@ class StableDiffusion(ComposerModel):
             raise ValueError(f'prediction type must be one of sample, epsilon, or v_prediction. Got {prediction_type}')
         self.val_seed = val_seed
         self.image_key = image_key
-        self.image_latents_key = image_latents_key
-        self.precomputed_latents = precomputed_latents
+        self.ignore_img_encoder = ignore_img_encoder
         self.sdxl = sdxl
         if self.sdxl:
             self.latent_scale = 0.13025
@@ -161,7 +159,7 @@ class StableDiffusion(ComposerModel):
         self.inference_scheduler = inference_noise_scheduler
         self.text_key = text_key
         self.text_key_2 = text_key_2
-        self.text_latents_key = text_latents_key
+        self.ignore_txt_encoder = ignore_txt_encoder
         self.encode_latents_in_fp16 = encode_latents_in_fp16
         # freeze text_encoder during diffusion training
         self.text_encoder.requires_grad_(False)
@@ -176,15 +174,22 @@ class StableDiffusion(ComposerModel):
             self.unet._fsdp_wrap = True
 
     def forward(self, batch):
-        latents, conditioning = None, None
-        # Use latents if specified and available. When specified, they might not exist during eval
-        if self.precomputed_latents and self.image_latents_key in batch and self.text_latents_key in batch:
-            if self.sdxl:
-                assert False, 'NIY'
-            latents, conditioning = batch[self.image_latents_key], batch[self.text_latents_key]
+        inputs, conditioning = batch[self.image_key], batch[self.text_key]
+        # TODO should we mask empty captions during training?
+
+        # Encode Image
+        if self.ignore_img_encoder:
+            latents = inputs
+        elif self.encode_latents_in_fp16:
+            with torch.cuda.amp.autocast(enabled=False):
+                latents = self.vae.encode(inputs.half())['latent_dist'].sample().data
         else:
-            inputs, conditioning = batch[self.image_key], batch[self.text_key]
-            # TODO should we mask empty captions during training?
+            latents = self.vae.encode(inputs)['latent_dist'].sample().data
+        # Magical scaling number (See https://github.com/huggingface/diffusers/issues/437#issuecomment-1241827515)
+        latents *= self.latent_scale
+
+        # Encode Text
+        if not self.ignore_txt_encoder:
             conditioning = conditioning.view(-1, conditioning.shape[-1])
             if self.sdxl:
                 conditioning_2 = batch[self.text_key_2]
@@ -194,23 +199,18 @@ class StableDiffusion(ComposerModel):
             if self.encode_latents_in_fp16:
                 # Disable autocast context as models are in fp16
                 with torch.cuda.amp.autocast(enabled=False):
-                    # Encode the images to the latent space.
                     # Encode prompt into conditioning vector
-                    latents = self.vae.encode(inputs.half())['latent_dist'].sample().data
                     text_encoder_out = self.text_encoder(conditioning)
                     conditioning = text_encoder_out[0]
                     pooled_conditioning = None
                     if self.sdxl:
                         pooled_conditioning = text_encoder_out[1]
             else:
-                latents = self.vae.encode(inputs)['latent_dist'].sample().data
                 text_encoder_out = self.text_encoder(conditioning)
                 conditioning = text_encoder_out[0]
                 pooled_conditioning = None
                 if self.sdxl:
                     pooled_conditioning = text_encoder_out[1]
-            # Magical scaling number (See https://github.com/huggingface/diffusers/issues/437#issuecomment-1241827515)
-            latents *= self.latent_scale
 
         # Sample the diffusion timesteps
         timesteps = torch.randint(0, len(self.noise_scheduler), (latents.shape[0],), device=latents.device)
