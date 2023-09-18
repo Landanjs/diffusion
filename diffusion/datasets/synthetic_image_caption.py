@@ -23,23 +23,25 @@ class SyntheticImageCaptionDataset(Dataset):
 
         super().__init__()
         self.num_samples = num_samples
-        img_channel_dim = 4 if precompute_img_encoder else 3
-        self.images = torch.randn(num_samples, img_channel_dim, image_size, image_size)
-
-        if precompute_txt_encoder:
-            self.captions = torch.randn(num_samples, caption_length, txt_embed_dim)
-        else:
-            self.captions = torch.randint(0, 128, (num_samples, caption_length), dtype=torch.long)
-        self.pooled_captions = torch.randn(num_samples, 1280)
+        self.image_size = image_size
+        self.caption_length = caption_length
+        self.img_channel_dim = 4 if precompute_img_encoder else 3
+        self.precompute_txt_encoder = precompute_txt_encoder
+        self.caption_length = caption_length
+        self.txt_embed_dim = txt_embed_dim
 
     def __len__(self):
-        return len(self.images)
+        return self.num_samples
 
     def __getitem__(self, idx):
-        return {'image': self.images[idx],
-                'captions': self.captions[idx],
-                'captions_2': self.captions[idx],
-                'pooled_conditioning': self.pooled_captions[idx],
+        if self.precompute_txt_encoder:
+            captions = torch.randn(self.caption_length, self.txt_embed_dim)
+        else:
+            captions = torch.randint(0, 128, (self.caption_length,), dtype=torch.long)
+        return {'image': torch.randn(self.img_channel_dim, self.image_size, self.image_size),
+                'captions': captions,
+                'captions_2': captions,
+                'pooled_conditioning': torch.randn(1280),
                 'cond_original_size': torch.tensor([256., 256.]),
                 'cond_crops_coords_top_left': torch.tensor([0., 0.]),
                 'cond_target_size': torch.tensor([256., 256.])}
