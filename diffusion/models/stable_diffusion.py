@@ -211,6 +211,8 @@ class StableDiffusion(ComposerModel):
                 pooled_conditioning = None
                 if self.sdxl:
                     pooled_conditioning = text_encoder_out[1]
+        else:
+            pooled_conditioning = batch['pooled_conditioning']
 
         # Sample the diffusion timesteps
         timesteps = torch.randint(0, len(self.noise_scheduler), (latents.shape[0],), device=latents.device)

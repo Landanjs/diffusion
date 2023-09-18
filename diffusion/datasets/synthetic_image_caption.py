@@ -38,6 +38,7 @@ class SyntheticImageCaptionDataset(Dataset):
         return {'image': self.images[idx],
                 'captions': self.captions[idx],
                 'captions_2': self.captions[idx],
+                'pooled_conditioning': torch.randn(1280),
                 'cond_original_size': torch.tensor([256., 256.]),
                 'cond_crops_coords_top_left': torch.tensor([0., 0.]),
                 'cond_target_size': torch.tensor([256., 256.])}
