@@ -43,6 +43,9 @@ def build_synthetic_image_caption_dataloader(
     image_size: int = 512,
     caption_length: int = 77,
     num_samples: int = 100_000,
+    precompute_img_encoder: bool = False,
+    precompute_txt_encoder: bool = False,
+    txt_embed_dim: int = 2048,
     dataloader_kwargs: Optional[Dict] = None,
 ):
     """Builds a dataloader for the synthetic image-caption dataset.
@@ -61,6 +64,9 @@ def build_synthetic_image_caption_dataloader(
         image_size=image_size,
         caption_length=caption_length,
         num_samples=num_samples,
+        precompute_img_encoder=precompute_img_encoder,
+        precompute_txt_encoder=precompute_txt_encoder,
+        txt_embed_dim=txt_embed_dim,
     )
 
     dataloader = DataLoader(
