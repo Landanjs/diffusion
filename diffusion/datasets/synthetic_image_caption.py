@@ -30,6 +30,7 @@ class SyntheticImageCaptionDataset(Dataset):
             self.captions = torch.randn(num_samples, caption_length, txt_embed_dim)
         else:
             self.captions = torch.randint(0, 128, (num_samples, caption_length), dtype=torch.long)
+        self.pooled_captions = torch.randn(num_samples, 1280)
 
     def __len__(self):
         return len(self.images)
@@ -38,7 +39,7 @@ class SyntheticImageCaptionDataset(Dataset):
         return {'image': self.images[idx],
                 'captions': self.captions[idx],
                 'captions_2': self.captions[idx],
-                'pooled_conditioning': torch.randn(1280),
+                'pooled_conditioning': self.pooled_captions[idx],
                 'cond_original_size': torch.tensor([256., 256.]),
                 'cond_crops_coords_top_left': torch.tensor([0., 0.]),
                 'cond_target_size': torch.tensor([256., 256.])}
