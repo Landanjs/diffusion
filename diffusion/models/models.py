@@ -354,7 +354,6 @@ def stable_diffusion_2(
         val_guidance_scales=val_guidance_scales,
         val_seed=val_seed,
         loss_bins=loss_bins,
-        precomputed_latents=precomputed_latents,
         encode_latents_in_fp16=encode_latents_in_fp16,
         fsdp=fsdp,
     )
