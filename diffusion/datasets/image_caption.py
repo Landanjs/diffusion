@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from transformers import AutoTokenizer
 
-from diffusion.datasets.laion.transforms import LargestCenterSquare, RandomCropSquareReturnTransform, LargestCenterSquareReturnTransform
+from diffusion.datasets.laion.transforms import RandomCropSquareReturnTransform, LargestCenterSquareReturnTransform, RandomCropAspectRatioTransorm
 
 # Disable PIL max image size limit
 Image.MAX_IMAGE_PIXELS = None
@@ -54,7 +54,7 @@ class StreamingImageCaptionDataset(StreamingDataset):
         caption_key: str = 'caption',
         sdxl: Optional[bool] = False,
         cond_drop_prob: float = 0.0,
-        rand_crop: bool = True,
+        crop_type: Optional[str] = 'random',
         **streaming_kwargs,
     ) -> None:
 
@@ -83,11 +83,14 @@ class StreamingImageCaptionDataset(StreamingDataset):
         self.caption_key = caption_key
 
         self.sdxl = sdxl
-        if sdxl:
-            if rand_crop:
-                self.sdxl_transform = RandomCropSquareReturnTransform(self.image_size)
-            else:
-                self.sdxl_transform = LargestCenterSquareReturnTransform(self.image_size)
+        if crop_type == 'static':
+            self.crop = LargestCenterSquareReturnTransform(self.image_size)
+        elif crop_type == 'random':
+            self.crop = RandomCropSquareReturnTransform(self.image_size)
+        elif crop_type == 'aspect_ratio':
+            self.crop = RandomCropAspectRatioTransorm()
+        elif crop_type is None:
+            self.crop = None
         self.cond_drop_prob = cond_drop_prob # sdxl
 
     def __getitem__(self, index):
@@ -100,10 +103,8 @@ class StreamingImageCaptionDataset(StreamingDataset):
         if img.mode != 'RGB':
             img = img.convert('RGB')
 
-        crop_top, crop_left, image_height, image_width = None, None, None, None
-        if self.sdxl:
-            # sdxl crop to return params
-            img, crop_top, crop_left, image_height, image_width = self.sdxl_transform(img)
+        if self.crop is not None:
+            img, crop_top, crop_left, image_height, image_width = self.crop(img)
 
         if self.transform is not None:
             img = self.transform(img)
@@ -163,7 +164,7 @@ def build_streaming_image_caption_dataloader(
     caption_key: str = 'caption',
     sdxl: Optional[bool] = False,
     cond_drop_prob: float = 0.0,
-    rand_crop: bool = True,
+    crop_type: Optional[str] = 'random',
     streaming_kwargs: Optional[Dict] = None,
     dataloader_kwargs: Optional[Dict] = None,
 ):
@@ -209,18 +210,10 @@ def build_streaming_image_caption_dataloader(
 
     # Setup the transforms to apply
     if transform is None:
-        if sdxl:
-            # do center square crop separately
-            transform = [ 
-                transforms.ToTensor(), 
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                ]
-        else:
-            transform = [
-                LargestCenterSquare(resize_size),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # # Normalize from 0 to 1 to -1 to 1
-            ]
+        transform = [
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
     transform = transforms.Compose(transform)
     assert isinstance(transform, Callable)
 
@@ -237,7 +230,7 @@ def build_streaming_image_caption_dataloader(
         batch_size=batch_size,
         sdxl=sdxl,
         cond_drop_prob=cond_drop_prob,
-        rand_crop=rand_crop,
+        crop_type=crop_type,
         **streaming_kwargs,
     )
 
