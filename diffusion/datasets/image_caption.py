@@ -102,13 +102,11 @@ class StreamingImageCaptionDataset(StreamingDataset):
             img = Image.open(BytesIO(sample[self.image_key]))
         if img.mode != 'RGB':
             img = img.convert('RGB')
-
         if self.crop is not None:
             img, crop_top, crop_left, image_height, image_width = self.crop(img)
 
         if self.transform is not None:
             img = self.transform(img)
-
         # Caption
         if torch.rand(1) < self.caption_drop_prob:
             caption = ''
