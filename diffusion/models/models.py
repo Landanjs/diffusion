@@ -207,6 +207,8 @@ def stable_diffusion_xl(
 
     if pretrained:
         unet = UNet2DConditionModel.from_pretrained(unet_model_name, subfolder='unet')
+        print('COMPILE U-NET')
+        unet = torch.compile(unet, dynamic=False, options={'fallback_random': True})
     else:
         config = PretrainedConfig.get_config_dict(unet_model_name, subfolder='unet')
         unet = UNet2DConditionModel(**config[0])
