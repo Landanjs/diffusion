@@ -88,6 +88,8 @@ def stable_diffusion_2(
     else:
         config = PretrainedConfig.get_config_dict(model_name, subfolder='unet')
         unet = UNet2DConditionModel(**config[0])
+    print('COMPILE U-NET')
+    unet = torch.compile(unet, dynamic=False, options={'fallback_random': True})
 
     if encode_latents_in_fp16:
         vae = AutoencoderKL.from_pretrained(model_name, subfolder='vae', torch_dtype=torch.float16)
@@ -138,6 +140,7 @@ def stable_diffusion_2(
             attn_processor = ClippedAttnProcessor2_0(clip_val=clip_qkv)
         log.info('Using %s with clip_val %.1f' % (attn_processor.__class__, clip_qkv))
         model.unet.set_attn_processor(attn_processor)
+    
 
     return model
 
@@ -223,7 +226,6 @@ def stable_diffusion_xl(
         unet.conv_out = zero_module(unet.conv_out)
     print('COMPILE U-NET')
     unet = torch.compile(unet)
-
 
     torch_dtype = torch.float16 if encode_latents_in_fp16 else None
     try:
