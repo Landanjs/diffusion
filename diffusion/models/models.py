@@ -222,7 +222,7 @@ def stable_diffusion_xl(
         # Last conv block out projection
         unet.conv_out = zero_module(unet.conv_out)
     print('COMPILE U-NET')
-    unet = torch.compile(unet, mode="reduce-overhead", fullgraph=True)
+    unet = torch.compile(unet, dynamic=False, mode="reduce-overhead", fullgraph=True)
 
 
     torch_dtype = torch.float16 if encode_latents_in_fp16 else None
