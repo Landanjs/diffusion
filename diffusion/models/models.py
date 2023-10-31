@@ -224,8 +224,7 @@ def stable_diffusion_xl(
                 layer = zero_module(layer)
         # Last conv block out projection
         unet.conv_out = zero_module(unet.conv_out)
-    print('COMPILE U-NET')
-    unet = torch.compile(unet)
+
 
     torch_dtype = torch.float16 if encode_latents_in_fp16 else None
     try:
@@ -281,6 +280,8 @@ def stable_diffusion_xl(
         log.info('Using %s with clip_val %.1f' % (attn_processor.__class__, clip_qkv))
         model.unet.set_attn_processor(attn_processor)
 
+    print('COMPILE U-NET AFTER')
+    model.unet = torch.compile(model.unet)
     return model
 
 
