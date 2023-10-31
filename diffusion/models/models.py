@@ -232,6 +232,8 @@ def stable_diffusion_xl(
         vae = AutoencoderKL.from_pretrained(vae_model_name, subfolder='vae', torch_dtype=torch_dtype)
     except:  # for handling SDXL vae fp16 fixed checkpoint
         vae = AutoencoderKL.from_pretrained(vae_model_name, torch_dtype=torch_dtype)
+    print('COMPILE VAE')
+    vae = torch.compile(vae)
 
     tokenizer = SDXLTokenizer(model_name)
     text_encoder = SDXLTextEncoder(model_name, encode_latents_in_fp16)
