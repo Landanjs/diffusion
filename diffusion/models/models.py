@@ -281,7 +281,7 @@ def stable_diffusion_xl(
         model.unet.set_attn_processor(attn_processor)
 
     print('COMPILE U-NET AFTER')
-    model.unet = torch.compile(model.unet)
+    model.unet = torch.compile(model.unet, dynamic=False, options={'fallback_random': True})
     return model
 
 
