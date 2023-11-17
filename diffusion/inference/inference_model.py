@@ -57,6 +57,7 @@ class StableDiffusionInference():
                     del state_dict['state']['model'][key]
             model.load_state_dict(state_dict['state']['model'], strict=False)
         model.to(self.device)
+        self.model = torch.compile(model)
         self.model = model.eval()
 
     def predict(self, model_requests: List[Dict[str, Any]]):
