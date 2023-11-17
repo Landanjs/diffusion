@@ -57,6 +57,7 @@ class StableDiffusionInference():
                     del state_dict['state']['model'][key]
             model.load_state_dict(state_dict['state']['model'], strict=False)
         model.to(self.device)
+        print('COMPILE, COMPILE!')
         self.model = torch.compile(model)
         self.model = model.eval()
 
@@ -72,6 +73,7 @@ class StableDiffusionInference():
 
             # Process inputs
             inputs = req['input']
+            print(inputs, type(inputs))
             if isinstance(inputs, str):
                 prompts.append(inputs)
             elif isinstance(inputs, list):
