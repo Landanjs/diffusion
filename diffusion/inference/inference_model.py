@@ -69,11 +69,13 @@ class StableDiffusionInference():
         for req in model_requests:
             if 'input' not in req:
                 raise RuntimeError('"input" must be provided to generate call')
-            inputs = req['input']
 
-            # Prompts and negative prompts if available
+            # Process inputs
+            inputs = req['input']
             if isinstance(inputs, str):
                 prompts.append(inputs)
+            elif isinstance(inputs, list):
+                prompts += inputs
             elif isinstance(inputs, Dict):
                 if 'prompt' not in inputs:
                     raise RuntimeError('"prompt" must be provided to generate call if using a dict as input')
