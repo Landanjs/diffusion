@@ -158,6 +158,8 @@ class StableDiffusionXLInference():
                     del state_dict['state']['model'][key]
             model.load_state_dict(state_dict['state']['model'], strict=False)
         model.to(self.device)
+        print('COMPILE, COMPILE')
+        model = torch.compile(model)
         self.model = model.eval()
 
     def predict(self, model_requests: List[Dict[str, Any]]):
@@ -174,6 +176,8 @@ class StableDiffusionXLInference():
             # Prompts and negative prompts if available
             if isinstance(inputs, str):
                 prompts.append(inputs)
+            elif isinstance(inputs, list):
+                prompts += inputs
             elif isinstance(inputs, Dict):
                 if 'prompt' not in inputs:
                     raise RuntimeError('"prompt" must be provided to generate call if using a dict as input')
