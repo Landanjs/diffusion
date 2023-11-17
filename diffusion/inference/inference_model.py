@@ -172,6 +172,7 @@ class StableDiffusionXLInference():
             if 'input' not in req:
                 raise RuntimeError('"input" must be provided to generate call')
             inputs = req['input']
+            print(inputs, type(inputs))
 
             # Prompts and negative prompts if available
             if isinstance(inputs, str):
