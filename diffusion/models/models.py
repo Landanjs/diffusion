@@ -219,6 +219,7 @@ def stable_diffusion_xl(
         unet = UNet2DConditionModel.from_pretrained(unet_model_name, subfolder='unet')
     else:
         config = PretrainedConfig.get_config_dict(unet_model_name, subfolder='unet')
+        config[0]['block_out_channels'] = [c*2 for c in config[0]['block_out_channels']]
         unet = UNet2DConditionModel(**config[0])
 
         # Zero initialization trick
