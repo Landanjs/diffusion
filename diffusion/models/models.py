@@ -235,10 +235,17 @@ def stable_diffusion_xl(
     
     # unet.up_blocks._fsdp_wrap = False
     # unet.down_blocks._fsdp_wrap = False
+    if hasattr(unet.mid_block, 'attentions'):
+        for attention in unet.mid_block.attentions:
+            attention._fsdp_wrap = True
     for block in unet.up_blocks:
-        block._fsdp_wrap = True
+        if hasattr(block, 'attentions'):
+            for attention in block.attentions:
+                attention._fsdp_wrap = True
     for block in unet.down_blocks:
-        block._fsdp_wrap = True    
+        if hasattr(block, 'attentions'):
+            for attention in block.attentions:
+                attention._fsdp_wrap = True  
 
     torch_dtype = torch.float16 if encode_latents_in_fp16 else None
     try:
