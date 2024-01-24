@@ -233,8 +233,8 @@ def stable_diffusion_xl(
         # Last conv block out projection
         unet.conv_out = zero_module(unet.conv_out)
     
-    unet.up_blocks._fsdp_wrap = False
-    unet.down_blocks._fsdp_wrap = False
+    # unet.up_blocks._fsdp_wrap = False
+    # unet.down_blocks._fsdp_wrap = False
     for block in unet.up_blocks:
         block._fsdp_wrap = True
     for block in unet.down_blocks:
