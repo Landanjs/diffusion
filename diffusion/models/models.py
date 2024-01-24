@@ -232,6 +232,13 @@ def stable_diffusion_xl(
                 layer = zero_module(layer)
         # Last conv block out projection
         unet.conv_out = zero_module(unet.conv_out)
+    
+    unet.up_blocks._fsdp_wrap = False
+    unet.down_blocks._fsdp_wrap = False
+    for block in unet.up_blocks:
+        block._fsdp_wrap = True
+    for block in unet.down_blocks:
+        block._fsdp_wrap = True    
 
     torch_dtype = torch.float16 if encode_latents_in_fp16 else None
     try:
