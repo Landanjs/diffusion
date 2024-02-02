@@ -54,7 +54,7 @@ with torch.no_grad():
         loss = F.mse_loss(out[0], out[1], reduction='none').mean(dim=(1, 2, 3))
         for t, l in zip(out[-1], loss):
             losses[t.cpu().item()].append(l.cpu().item())
-        if count == 10000:
+        if count == args.num_batches:
             break
         count += 1
 losses = {k: (torch.tensor(v).mean().item(), torch.tensor(v).std().item()) for k, v in losses.items()}
