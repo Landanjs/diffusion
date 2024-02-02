@@ -7,6 +7,9 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', action='store_true')
+parser.add_argument('--batch_size', type=int)
+parser.add_argument('--num_batches', type=int)
+parser.add_argument('')
 args = parser.parse_args()
 
 remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
@@ -16,11 +19,11 @@ print('Creating dataloader')
 dataloader = build_streaming_image_caption_dataloader(
     remote=remotes,
     local=locals,
-    batch_size=32,
+    batch_size=args.batch_size,
     image_key='jpg',
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
-    streaming_kwargs={'shuffle': True, 'predownload': 32},
+    streaming_kwargs={'shuffle': True, 'predownload': args.batch_size},
     dataloader_kwargs={'num_workers': 8},
 )
 print('Created Dataloader')
