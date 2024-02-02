@@ -14,7 +14,8 @@ dataloader = build_streaming_image_caption_dataloader(
     image_key='jpg',
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
-    streaming_kwargs={'shuffle': True},
+    streaming_kwargs={'shuffle': True, 'predownload': 32},
+    dataloader_kwargs={'num_workers': 8},
 )
 print('Created Dataloader')
 
@@ -28,9 +29,10 @@ count = 0
 losses = {k: [] for k in range(1000)}
 with torch.no_grad():
     for batch in tqdm(dataloader):
+        batch['jpg'], batch['caption'] = batch['jpg'].cuda(), batch['caption'].cuda()
         out = model(batch)
         losses[out[-1].item()].append(model.loss(out, batch).item())
-        if count == 10000:
+        if count == 100:
             break
         count += 1
 losses = {k: (torch.tensor(v).mean().item(), torch.tensor(v).std().item()) for k, v in losses.items()}
