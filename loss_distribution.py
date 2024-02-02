@@ -29,7 +29,7 @@ count = 0
 losses = {k: [] for k in range(1000)}
 with torch.no_grad():
     for batch in tqdm(dataloader):
-        batch['jpg'], batch['caption'] = batch['jpg'].cuda(), batch['caption'].cuda()
+        batch['image'], batch['captions'] = batch['image'].cuda(), batch['captions'].cuda()
         out = model(batch)
         losses[out[-1].item()].append(model.loss(out, batch).item())
         if count == 100:
