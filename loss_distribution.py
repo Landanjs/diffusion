@@ -32,7 +32,9 @@ with torch.no_grad():
         for k, v in batch.items():
             batch[k] = v.cuda()
         out = model(batch)
-        losses[out[-1].item()].append(model.loss(out, batch).item())
+        loss = model.loss(out, batch)
+        for t, l in zip(out[-1], loss):
+            losses[t.cpu().item()].append(l.cpu().item())
         if count == 100:
             break
         count += 1
