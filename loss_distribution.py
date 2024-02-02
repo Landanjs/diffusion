@@ -9,7 +9,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', action='store_true')
 parser.add_argument('--batch_size', type=int)
 parser.add_argument('--num_batches', type=int)
-parser.add_argument('')
 args = parser.parse_args()
 
 remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
