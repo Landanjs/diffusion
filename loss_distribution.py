@@ -3,6 +3,11 @@ from diffusion.models.models import stable_diffusion_xl
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--pretrained', action='store_true')
+args = parser.parse_args()
 
 remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
 locals = '/tmp/4.5v2/filter_v2/256-512/4.5-5.0/1.3'
@@ -23,7 +28,15 @@ print('Created Dataloader')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 print('Creating model')
-model = stable_diffusion_xl(fsdp=False, clip_qkv=None, loss_bins=[], val_guidance_scales=[], precomputed_latents=False, encode_latents_in_fp16=False)
+model = stable_diffusion_xl(
+    fsdp=False,
+    clip_qkv=None,
+    loss_bins=[],
+    val_guidance_scales=[],
+    precomputed_latents=False,
+    encode_latents_in_fp16=False,
+    pretrained=args.pretrained
+)
 print('Created model')
 model = model.to(device)
 
