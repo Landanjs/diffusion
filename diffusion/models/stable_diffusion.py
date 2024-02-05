@@ -259,7 +259,7 @@ class StableDiffusion(ComposerModel):
         weights = self.loss_weights[outputs[2]]
         loss = (self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3)) * torch.exp(weights) + weights).mean()
         return {
-            'total_loss': loss,
+            'total': loss,
             't0_weight': self.loss_weights[0],
             't250_weight': self.loss_weights[249],
             't500_weight': self.loss_weights[499],
