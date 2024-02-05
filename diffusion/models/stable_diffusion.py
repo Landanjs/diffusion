@@ -169,7 +169,7 @@ class StableDiffusion(ComposerModel):
             self.vae._fsdp_wrap = False
             self.unet._fsdp_wrap = True
 
-        loss_weights = torch.randn(1000, requires_grad=True) * 0.02
+        loss_weights = torch.zeros(1000, requires_grad=True)
         self.loss_weights = torch.nn.parameter.Parameter(loss_weights)
 
     def forward(self, batch):
@@ -256,10 +256,12 @@ class StableDiffusion(ComposerModel):
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
+        unweight_loss = self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3))
         weights = self.loss_weights[outputs[2]]
-        loss = (self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3)) * torch.exp(weights) + weights).mean()
+        loss = (unweight_loss * torch.exp(weights) + weights).mean()
         return {
             'total': loss,
+            'unweighted_loss': unweight_loss,
             't0_weight': self.loss_weights[0],
             't250_weight': self.loss_weights[249],
             't500_weight': self.loss_weights[499],
