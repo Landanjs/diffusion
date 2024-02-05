@@ -169,6 +169,9 @@ class StableDiffusion(ComposerModel):
             self.vae._fsdp_wrap = False
             self.unet._fsdp_wrap = True
 
+        loss_weights = torch.randn(1000, requires_grad=True) * 0.02
+        self.loss_weights = torch.nn.parameters(loss_weights)
+
     def forward(self, batch):
         latents, conditioning, conditioning_2, pooled_conditioning = None, None, None, None
         # Use latents if specified and available. When specified, they might not exist during eval
@@ -253,7 +256,16 @@ class StableDiffusion(ComposerModel):
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
-        return self.loss_fn(outputs[0], outputs[1])
+        weights = self.loss_weights[outputs[2]]
+        loss = (self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3)) * torch.exp(weights) + weights).mean()
+        return {
+            'total_loss': loss,
+            't0_weight': self.loss_weights[0],
+            't250_weight': self.loss_weights[250],
+            't500_weight': self.loss_weights[500],
+            't750_weight': self.loss_weights[750],
+            't1000_weight': self.loss_weights[1000],
+        }
 
     def eval_forward(self, batch, outputs=None):
         """For stable diffusion, eval forward computes unet outputs as well as some samples."""
