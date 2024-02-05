@@ -170,7 +170,7 @@ class StableDiffusion(ComposerModel):
             self.unet._fsdp_wrap = True
 
         loss_weights = torch.randn(1000, requires_grad=True) * 0.02
-        self.loss_weights = torch.nn.parameters(loss_weights)
+        self.loss_weights = torch.nn.parameter.Parameter(loss_weights)
 
     def forward(self, batch):
         latents, conditioning, conditioning_2, pooled_conditioning = None, None, None, None
