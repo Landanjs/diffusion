@@ -261,10 +261,10 @@ class StableDiffusion(ComposerModel):
         return {
             'total_loss': loss,
             't0_weight': self.loss_weights[0],
-            't250_weight': self.loss_weights[250],
-            't500_weight': self.loss_weights[500],
-            't750_weight': self.loss_weights[750],
-            't1000_weight': self.loss_weights[1000],
+            't250_weight': self.loss_weights[249],
+            't500_weight': self.loss_weights[499],
+            't750_weight': self.loss_weights[749],
+            't1000_weight': self.loss_weights[999],
         }
 
     def eval_forward(self, batch, outputs=None):
