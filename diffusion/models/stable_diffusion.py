@@ -257,8 +257,8 @@ class StableDiffusion(ComposerModel):
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
         unweight_loss = self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3))
-        weights = self.loss_weights[outputs[2]] * 10
-        loss = (unweight_loss * torch.exp(weights) + weights).mean()
+        weights = self.loss_weights[outputs[2]]
+        loss = ((unweight_loss / torch.exp(weights)) + weights).mean()
         return {
             'total': loss,
             'unweighted_loss': unweight_loss,
