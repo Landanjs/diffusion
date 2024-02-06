@@ -256,18 +256,20 @@ class StableDiffusion(ComposerModel):
 
     def loss(self, outputs, batch):
         """Loss between unet output and added noise, typically mse."""
-        unweight_loss = self.loss_fn(outputs[0], outputs[1], reduction='none').mean(dim=(1, 2, 3))
-        weights = self.loss_weights[outputs[2]]
-        loss = ((unweight_loss / torch.exp(weights)) + weights).mean()
-        return {
-            'total': loss,
-            'unweighted_loss': unweight_loss,
-            't0_weight': self.loss_weights[0],
-            't250_weight': self.loss_weights[249],
-            't500_weight': self.loss_weights[499],
-            't750_weight': self.loss_weights[749],
-            't1000_weight': self.loss_weights[999],
-        }
+        loss_dict = {}
+        all_loss = self.loss_fn(outputs[0], outputs[1], reduction='none')
+        loss_dict['unweight_loss'] = all_loss.mean()
+
+        unweight_loss = all_loss.mean(dim=(1, 2, 3))
+        weights = self.loss_weights[outputs[2]] * 10
+        loss_dict['total'] = ((unweight_loss / torch.exp(weights)) + weights).mean()
+
+        for t in [0, 249, 499, 749, 999]:
+            t_mask = outputs[2] == t
+            loss_dict[f't{t+1}_weight'] = self.loss_weights[t]
+            loss_dict[f't{t+1}_loss'] = unweight_loss[t_mask].mean() if t_mask.sum() else torch.zeros_like(loss_dict['unweight_loss'])
+
+        return loss_dict
 
     def eval_forward(self, batch, outputs=None):
         """For stable diffusion, eval forward computes unet outputs as well as some samples."""
