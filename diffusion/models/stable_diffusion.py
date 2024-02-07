@@ -264,7 +264,7 @@ class StableDiffusion(ComposerModel):
         weights = self.loss_weights[outputs[2]] * 10
         loss_dict['total'] = ((unweight_loss / torch.exp(weights)) + weights).mean()
 
-        for t in [0, 249, 499, 749, 999]:
+        for t in [0, 124, 249, 374, 499, 624, 749, 874, 999]:
             t_mask = outputs[2] == t
             loss_dict[f't{t+1}_weight'] = self.loss_weights[t]
             loss_dict[f't{t+1}_loss'] = unweight_loss[t_mask].mean() if t_mask.sum() else torch.zeros_like(loss_dict['unweight_loss'])
