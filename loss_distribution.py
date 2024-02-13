@@ -1,3 +1,4 @@
+from composer.utils.file_helpers import get_file
 from diffusion.datasets.image_caption import build_streaming_image_caption_dataloader
 from diffusion.models.models import stable_diffusion_xl
 from tqdm import tqdm
@@ -5,7 +6,10 @@ import torch
 import torch.nn.functional as F
 import argparse
 
+LOCAL_CHECKPOINT_PATH = '/tmp/model.pt'
+
 parser = argparse.ArgumentParser()
+parser.add_argument('--chkpt_path', type=str)
 parser.add_argument('--pretrained', action='store_true')
 parser.add_argument('--batch_size', type=int)
 parser.add_argument('--num_batches', type=int)
@@ -39,23 +43,38 @@ model = stable_diffusion_xl(
     encode_latents_in_fp16=False,
     pretrained=args.pretrained
 )
+
+
+# Load checkpoint
+print('Loading Checkpoint')
+if not args.pretrained:
+    get_file(path=args.chkpt_path, destination=LOCAL_CHECKPOINT_PATH)
+    state_dict = torch.load(LOCAL_CHECKPOINT_PATH)
+    for key in list(state_dict['state']['model'].keys()):
+        if 'val_metrics.' in key:
+            del state_dict['state']['model'][key]
+    model.load_state_dict(state_dict['state']['model'], strict=False)
+print('Loaded Checkpoint')
+
 print('Created model')
-model = model.to(device)
+model.to(device)
+model = model.eval()
 
 print('Loading batch')
 count = 0
-losses = {k: [] for k in range(1000)}
-with torch.no_grad():
-    for batch in tqdm(dataloader):
-        for k, v in batch.items():
-            batch[k] = v.to(device)
-        out = model(batch)
-        loss = F.mse_loss(out[0], out[1], reduction='none').mean(dim=(1, 2, 3))
-        for t, l in zip(out[-1], loss):
-            losses[t.cpu().item()].append(l.cpu().item())
-        if count == args.num_batches:
-            break
-        count += 1
-losses = {k: (torch.tensor(v).mean().item(), torch.tensor(v).std().item()) for k, v in losses.items()}
+losses = [[] for _ in range(1000)]
+with torch.cuda.amp.autocast(True):
+    with torch.no_grad():
+        for batch in tqdm(dataloader):
+            for k, v in batch.items():
+                batch[k] = v.to(device)
+            out = model(batch)
+            loss = F.mse_loss(out[0], out[1], reduction='none').mean(dim=(1, 2, 3))
+            for t, l in zip(out[-1], loss):
+                losses[t.cpu().item()].append(l.cpu().item())
+            if count == args.num_batches:
+                break
+            count += 1
+losses = [(torch.tensor(loss).mean().item(), torch.tensor(loss).std().item()) for loss in losses]
 print(losses)
 exit()
