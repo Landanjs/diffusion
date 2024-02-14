@@ -40,7 +40,7 @@ dataloader = build_streaming_image_caption_dataloader(
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
     streaming_kwargs={'shuffle': True, 'predownload': args.batch_size},
-    dataloader_kwargs={'num_workers': 58},
+    dataloader_kwargs={'num_workers': 32},
 )
 print('Created Dataloader')
 
