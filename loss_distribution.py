@@ -9,14 +9,27 @@ import argparse
 LOCAL_CHECKPOINT_PATH = '/tmp/model.pt'
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--remote_base', type=str)
 parser.add_argument('--chkpt_path', type=str)
 parser.add_argument('--pretrained', action='store_true')
 parser.add_argument('--batch_size', type=int)
 parser.add_argument('--num_batches', type=int)
 args = parser.parse_args()
 
-remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
-locals = '/tmp/4.5v2/filter_v2/256-512/4.5-5.0/1.3'
+#remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
+#locals = '/tmp/4.5v2/filter_v2/256-512/4.5-5.0/1.3'
+remotes = []
+locals = []
+remote_base = args.remote_base
+local_base = '/tmp/4.5v2/filter_v2'
+resolutions = [256, 512, 768, 1024, 1048576]
+aesthetics = ['4.5', '5.0', '5.5', '6.0', '6.25', '6.5', '6.75', '7.0', '100']
+for low_res, high_res in zip(resolutions[:-1], resolutions[1:]):
+    for low_aes, high_aes in zip(aesthetics[:-1], aesthetics[1:]):
+        for subdir in range(1, 5):
+            remotes.append(f'{remote_base}/{low_res}-{high_res}/{low_aes}-{high_aes}/{subdir}')
+            locals.append(f'{local_base}/{low_res}-{high_res}/{low_aes}-{high_aes}/{subdir}')
+
 
 print('Creating dataloader')
 dataloader = build_streaming_image_caption_dataloader(
@@ -27,7 +40,7 @@ dataloader = build_streaming_image_caption_dataloader(
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
     streaming_kwargs={'shuffle': True, 'predownload': args.batch_size},
-    dataloader_kwargs={'num_workers': 8},
+    dataloader_kwargs={'num_workers': 58},
 )
 print('Created Dataloader')
 
@@ -43,7 +56,6 @@ model = stable_diffusion_xl(
     encode_latents_in_fp16=False,
     pretrained=args.pretrained
 )
-
 
 # Load checkpoint
 print('Loading Checkpoint')
