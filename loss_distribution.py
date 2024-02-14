@@ -29,7 +29,7 @@ for low_res, high_res in zip(resolutions[:-1], resolutions[1:]):
         for subdir in range(1, 5):
             remotes.append(f'{remote_base}/{low_res}-{high_res}/{low_aes}-{high_aes}/{subdir}')
             locals.append(f'{local_base}/{low_res}-{high_res}/{low_aes}-{high_aes}/{subdir}')
-
+print(remotes)
 
 print('Creating dataloader')
 dataloader = build_streaming_image_caption_dataloader(
@@ -40,7 +40,7 @@ dataloader = build_streaming_image_caption_dataloader(
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
     streaming_kwargs={'shuffle': True, 'predownload': args.batch_size},
-    dataloader_kwargs={'num_workers': 32},
+    dataloader_kwargs={'num_workers': 8},
 )
 print('Created Dataloader')
 
