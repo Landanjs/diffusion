@@ -5,8 +5,7 @@ from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 import argparse
-
-LOCAL_CHECKPOINT_PATH = '/tmp/model.pt'
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--remote_base', type=str)
@@ -15,10 +14,11 @@ parser.add_argument('--pretrained', action='store_true')
 parser.add_argument('--batch_size', type=int)
 parser.add_argument('--num_batches', type=int)
 parser.add_argument('--num_workers', type=int, default=0)
+parser.add_argument('--img_size', type=int, default=256)
 args = parser.parse_args()
 
-#remotes = 'oci://mosaicml-internal-dataset-laion2b-en/4.5v2/filter_v2/256-512/4.5-5.0/1'
-#locals = '/tmp/4.5v2/filter_v2/256-512/4.5-5.0/1.3'
+LOCAL_CHECKPOINT_PATH = f'/tmp/{args.chkpt_path.split("/")[-1]}'
+
 remotes = []
 locals = []
 remote_base = args.remote_base
@@ -37,6 +37,7 @@ dataloader = build_streaming_image_caption_dataloader(
     remote=remotes,
     local=locals,
     batch_size=args.batch_size,
+    resize_size=args.img_size,
     image_key='jpg',
     caption_key='caption',
     tokenizer_name_or_path='stabilityai/stable-diffusion-xl-base-1.0',
@@ -61,7 +62,8 @@ model = stable_diffusion_xl(
 # Load checkpoint
 print('Loading Checkpoint')
 if not args.pretrained:
-    get_file(path=args.chkpt_path, destination=LOCAL_CHECKPOINT_PATH)
+    if not os.path.exists(LOCAL_CHECKPOINT_PATH):
+        get_file(path=args.chkpt_path, destination=LOCAL_CHECKPOINT_PATH)
     state_dict = torch.load(LOCAL_CHECKPOINT_PATH)
     for key in list(state_dict['state']['model'].keys()):
         if 'val_metrics.' in key:
@@ -88,6 +90,6 @@ with torch.cuda.amp.autocast(True):
             if count == args.num_batches:
                 break
             count += 1
-losses = [(torch.tensor(loss).mean().item(), torch.tensor(loss).std().item()) for loss in losses]
+losses = [(torch.tensor(loss).mean().item(), torch.tensor(loss).std().item(), len(loss)) for loss in losses]
 print(losses)
 exit()
