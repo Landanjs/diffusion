@@ -234,7 +234,7 @@ class StableDiffusion(ComposerModel):
 
         # Sample the diffusion timesteps
         timesteps = torch.randint(0,
-                                  len(self.noise_scheduler), (latents.shape[0],),
+                                  200, (latents.shape[0],),
                                   device=latents.device,
                                   generator=self.rng_generator)
         # Add noise to the inputs (forward diffusion)
