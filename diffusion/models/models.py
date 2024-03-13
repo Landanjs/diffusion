@@ -315,22 +315,22 @@ def stable_diffusion_xl(
     if hasattr(unet, 'mid_block') and unet.mid_block is not None:
         for attention in unet.mid_block.attentions:
             attention._fsdp_wrap = True
-        for resnet in unet.mid_block.resnets:
-            resnet._fsdp_wrap = True
+        # for resnet in unet.mid_block.resnets:
+        #     resnet._fsdp_wrap = True
     for block in unet.up_blocks:
         if hasattr(block, 'attentions'):
             for attention in block.attentions:
                 attention._fsdp_wrap = True
-        if hasattr(block, 'resnets'):
-            for resnet in block.resnets:
-                resnet._fsdp_wrap = True
+        # if hasattr(block, 'resnets'):
+        #     for resnet in block.resnets:
+        #         resnet._fsdp_wrap = True
     for block in unet.down_blocks:
         if hasattr(block, 'attentions'):
             for attention in block.attentions:
                 attention._fsdp_wrap = True
-        if hasattr(block, 'resnets'):
-            for resnet in block.resnets:
-                resnet._fsdp_wrap = True
+        # if hasattr(block, 'resnets'):
+        #     for resnet in block.resnets:
+        #         resnet._fsdp_wrap = True
 
     # Make the noise schedulers
     noise_scheduler = DDPMScheduler.from_pretrained(unet_model_name, subfolder='scheduler')
