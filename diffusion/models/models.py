@@ -313,24 +313,44 @@ def stable_diffusion_xl(
 
     assert isinstance(unet, UNet2DConditionModel)
     if hasattr(unet, 'mid_block') and unet.mid_block is not None:
-        for attention in unet.mid_block.attentions:
-            attention._fsdp_wrap = True
+        unet.mid_block._fsdp_wrap = True
+    # if hasattr(unet, 'mid_block') and unet.mid_block is not None:
+    #     for attention in unet.mid_block.attentions:
+    #         attention._fsdp_wrap = True
         # for resnet in unet.mid_block.resnets:
         #     resnet._fsdp_wrap = True
-    for block in unet.up_blocks:
-        if hasattr(block, 'attentions'):
-            for attention in block.attentions:
-                attention._fsdp_wrap = True
-        # if hasattr(block, 'resnets'):
-        #     for resnet in block.resnets:
-        #         resnet._fsdp_wrap = True
-    for block in unet.down_blocks:
-        if hasattr(block, 'attentions'):
-            for attention in block.attentions:
-                attention._fsdp_wrap = True
-        # if hasattr(block, 'resnets'):
-        #     for resnet in block.resnets:
-        #         resnet._fsdp_wrap = True
+    block = unet.up_blocks[0]
+    if hasattr(block, 'attentions'):
+        for attention in block.attentions:
+            attention._fsdp_warp = True
+        if hasattr(block, 'resnets'):
+            for resnet in block.resnets:
+                resnet._fsdp_wrap = True
+    unet.up_blocks[1]._fsdp_wrap = True
+    unet.up_blocks[2]._fsdp_wrap = True
+    # for block in unet.up_blocks:
+    #     if hasattr(block, 'attentions'):
+    #         for attention in block.attentions:
+    #             attention._fsdp_wrap = True
+    #     if hasattr(block, 'resnets'):
+    #         for resnet in block.resnets:
+    #             resnet._fsdp_wrap = True
+    unet.down_blocks[0]._fsdp_wrap = True
+    unet.down_blocks[1]._fsdp_wrap = True
+    block = unet.down_blocks[2]
+    if hasattr(block, 'attentions'):
+        for attention in block.attentions:
+            attention._fsdp_wrap = True
+    if hasattr(block, 'resnets'):
+        for resnet in block.resnets:
+            resnet._fsdp_wrap = True    
+    # for block in unet.down_blocks:
+    #     if hasattr(block, 'attentions'):
+    #         for attention in block.attentions:
+    #             attention._fsdp_wrap = True
+    #     if hasattr(block, 'resnets'):
+    #         for resnet in block.resnets:
+    #             resnet._fsdp_wrap = True
 
     # Make the noise schedulers
     noise_scheduler = DDPMScheduler.from_pretrained(unet_model_name, subfolder='scheduler')
