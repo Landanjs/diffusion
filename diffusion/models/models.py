@@ -312,13 +312,13 @@ def stable_diffusion_xl(
         unet.conv_out = zero_module(unet.conv_out)
 
     assert isinstance(unet, UNet2DConditionModel)
-    if hasattr(unet, 'mid_block') and unet.mid_block is not None:
-        unet.mid_block._fsdp_wrap = True
     # if hasattr(unet, 'mid_block') and unet.mid_block is not None:
-    #     for attention in unet.mid_block.attentions:
-    #         attention._fsdp_wrap = True
-        # for resnet in unet.mid_block.resnets:
-        #     resnet._fsdp_wrap = True
+        # unet.mid_block._fsdp_wrap = True
+    if hasattr(unet, 'mid_block') and unet.mid_block is not None:
+        for attention in unet.mid_block.attentions:
+            attention._fsdp_wrap = True
+        for resnet in unet.mid_block.resnets:
+            resnet._fsdp_wrap = True
     block = unet.up_blocks[0]
     if hasattr(block, 'attentions'):
         for attention in block.attentions:
