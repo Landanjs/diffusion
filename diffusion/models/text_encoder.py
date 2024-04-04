@@ -58,7 +58,7 @@ class MultiTextEncoder(torch.nn.Module):
                 if model_dim_key in text_encoder_config:
                     self.text_encoder_dim += text_encoder_config[model_dim_key]
                     # This does not add to proj_dim when pretrained and architecture is CLIPTextModel
-                    if not self.pretrained_sdxl or text_encoder_config['architectures'] != ['CLIPTextModel']:
+                    if (not self.pretrained_sdxl or text_encoder_config['architectures'] != ['CLIPTextModel']) and text_encoder_config['architectures'] != ['T5ForConditionalGeneration']:
                         self.text_encoder_proj_dim += text_encoder_config[model_dim_key]
                     dim_found = True
             if not dim_found:
@@ -75,6 +75,9 @@ class MultiTextEncoder(torch.nn.Module):
                 self.text_encoders.append(
                     CLIPTextModelWithProjection.from_pretrained(base_name, subfolder=subfolder,
                                                                 torch_dtype=torch_dtype))
+            elif architectures == ['T5ForConditionalGeneration']:
+                self.text_encoders.append(
+                    AutoModel.from_pretrained(base_name, subfolder=subfolder, torch_dtype=torch_dtype).encoder)
             else:
                 self.text_encoders.append(
                     AutoModel.from_pretrained(base_name, subfolder=subfolder, torch_dtype=torch_dtype))
@@ -108,12 +111,12 @@ class MultiTextEncoder(torch.nn.Module):
             if self.architectures[i] == 'CLIPTextModelWithProjection':
                 pooled_text = out[0]
                 all_pooled_text.append(pooled_text)
-            elif not self.pretrained_sdxl:
+            elif not self.pretrained_sdxl and self.architectures[i] != 'T5ForConditionalGeneration':
                 pooled_text = out[1]
                 all_pooled_text.append(pooled_text)
 
         text_embed = torch.concat(all_text_embed, dim=-1)
-        pooled_text = torch.concat(all_pooled_text, dim=-1)
+        pooled_text = torch.concat(all_pooled_text, dim=-1) if all_pooled_text else None
         return text_embed, pooled_text
 
 
