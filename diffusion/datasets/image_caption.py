@@ -152,7 +152,6 @@ class StreamingImageCaptionDataset(StreamingDataset):
             if isinstance(caption, List) and self.caption_selection == 'random':
                 caption = random.sample(caption, k=1)[0]
             caption = f"{sample['ASSET_TYPE']}. {caption}"
-            print(caption)
             out['drop_caption_mask'] = 1.0
 
         if self.tokenizer:
