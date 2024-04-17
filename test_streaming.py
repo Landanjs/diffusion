@@ -26,6 +26,9 @@ dataloader = build_streaming_image_caption_dataloader(remote=config['remotes'],
                                                                          'num_workers': 8,
                                                                          'persistent_workers': True,
                                                                          'pin_memory': True})
-
+started = False
+print('Entering for-loop')
 for batch in tqdm(dataloader):
-    pass
+    if not started:
+        print('Started!')
+        started = True
