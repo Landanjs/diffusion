@@ -1,7 +1,7 @@
 import torch
 import yaml
 from tqdm import tqdm
-from datasets import build_streaming_image_caption_dataloader
+from diffusion.datasets import build_streaming_image_caption_dataloader
 
 torch.distributed.init_process_group()
 
