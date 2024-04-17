@@ -5,7 +5,7 @@ from diffusion.datasets import build_streaming_image_caption_dataloader
 
 torch.distributed.init_process_group()
 
-with open('/mnt/config/parameters', 'r') as f:
+with open('/mnt/config/parameters.yaml', 'r') as f:
     config = yaml.safe_load(f)
 print(config)
 dataloader = build_streaming_image_caption_dataloader(remote=config['remotes'],
