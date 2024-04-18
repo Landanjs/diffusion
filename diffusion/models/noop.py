@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 import torch
 import torch.nn.functional as F
 from torchmetrics import Metric
+from diffusion.models.text_encoder import MultiTokenizer
 
 from composer.models.base import ComposerModel
 
@@ -20,7 +21,7 @@ class NoOpModel(ComposerModel):
     def __init__(self):
         super().__init__()
         self.weight = torch.nn.Linear(in_features=1, out_features=16)
-        self.tokenizer = None
+        self.tokenizer = MultiTokenizer(tokenizer_names_or_paths='stabilityai/stable-diffusion-xl-base-1.0/tokenizer')
 
     def loss(self, outputs: torch.Tensor, batch):
         y = torch.randn_like(self.weight.weight)
