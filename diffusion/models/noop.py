@@ -20,6 +20,7 @@ class NoOpModel(ComposerModel):
     def __init__(self):
         super().__init__()
         self.weight = torch.nn.Linear(in_features=1, out_features=16)
+        self.tokenizer = None
 
     def loss(self, outputs: torch.Tensor, batch):
         y = torch.randn_like(self.weight.weight)
