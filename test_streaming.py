@@ -3,7 +3,7 @@ import yaml
 from tqdm import tqdm
 from diffusion.datasets import build_streaming_image_caption_dataloader
 
-torch.distributed.init_process_group()
+torch.distributed.init_process_group() # TODO: backend as nccl
 
 with open('/mnt/config/parameters.yaml', 'r') as f:
     config = yaml.safe_load(f)
